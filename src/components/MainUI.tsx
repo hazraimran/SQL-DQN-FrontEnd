@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Send, Database } from 'lucide-react';
+import { MasteryProgress } from './MasteryProgress';
+import { easyQueries } from '../constants';
 
 interface Schema {
   name: string;
@@ -14,23 +16,42 @@ interface MainUIProps {
 export function MainUI({ initialOutput, initialSchemas }: MainUIProps) {
   const [output, setOutput] = useState(initialOutput);
   const [input, setInput] = useState('');
-  const [progress, setProgress] = useState(0);
   const [schemas, setSchemas] = useState(initialSchemas);
+  const [masteryLevels, setMasteryLevels] = useState([
+    0.6, // Basic Queries
+    0.6, // Joins
+    0.6, // Aggregations
+    0.6, // Subqueries
+    0.6, // Window Functions
+    0.6, // Indexes
+    0.6, // Transactions
+    0.6, // Views
+    0.6, // Stored Procedures
+    0.6  // Triggers
+  ]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
 
     try {
-      const response = await fetch('/submit-query', {
+      const response = await fetch('http://localhost:3000/submit-query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: input }),
+        body: JSON.stringify({ userQuery: input }),
       });
 
       const data = await response.json();
-      setOutput(data.output);
-      setProgress((prev) => Math.min(prev + 10, 100));
+      const action = parseInt(data.action, 10) as keyof typeof easyQueries;
+      const narrative = easyQueries[action]?.storyNarrative;      
+      setOutput(`Task ${action}: ${narrative}`);
+      const newMastery = data.newMastery;
+      // Simulate mastery progress update
+      setMasteryLevels(() => {
+        const newLevels = [...newMastery];
+        return newLevels;
+      });
+      
       setInput('');
     } catch (err) {
       setOutput('Error: Failed to execute query');
@@ -66,17 +87,8 @@ export function MainUI({ initialOutput, initialSchemas }: MainUIProps) {
       </div>
 
       <div className="space-y-4">
-        {/* Progress */}
-        <div className="bg-gray-800 rounded-xl p-4">
-          <h3 className="text-xl font-semibold mb-4">Progress</h3>
-          <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-blue-500 transition-all duration-500"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <p className="mt-2 text-right text-gray-400">{progress}% Complete</p>
-        </div>
+        {/* Mastery Progress */}
+        <MasteryProgress masteryLevels={masteryLevels} />
 
         {/* Schema */}
         <div className="bg-gray-800 rounded-xl p-4">
