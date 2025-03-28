@@ -1,12 +1,10 @@
-import React from 'react';
 import { Terminal } from 'lucide-react';
 
 interface WelcomeScreenProps {
-  onStart: () => void;
   onCustomSetup: () => void;
 }
 
-export function WelcomeScreen({ onStart, onCustomSetup }: WelcomeScreenProps) {
+export function WelcomeScreen({ onCustomSetup }: WelcomeScreenProps) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-900 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20" />
@@ -21,19 +19,12 @@ export function WelcomeScreen({ onStart, onCustomSetup }: WelcomeScreenProps) {
         </p>
         <div className="space-y-4">
           <button
-            onClick={onStart}
+            onClick={onCustomSetup}
             className="w-full px-8 py-4 bg-blue-500 text-white rounded-lg text-xl font-semibold
                      hover:bg-blue-600 transition-colors duration-200 shadow-lg
                      hover:shadow-blue-500/25"
           >
-            Quick Start
-          </button>
-          <button
-            onClick={onCustomSetup}
-            className="w-full px-8 py-4 bg-gray-700 text-white rounded-lg text-xl font-semibold
-                     hover:bg-gray-600 transition-colors duration-200"
-          >
-            Custom Setup
+            Set Up Game
           </button>
         </div>
       </div>

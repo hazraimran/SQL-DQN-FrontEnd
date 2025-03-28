@@ -1,28 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { Loader2, Terminal, Database, Trophy, Upload } from 'lucide-react';
-import { LoadingScreen } from './components/LoadingScreen';
+import { useState, useEffect } from 'react';
 import { WelcomeScreen } from './components/WelcomeScreen';
-import { SetupModal } from './components/SetupModal';
+import { LoadingScreen } from './components/LoadingScreen';
 import { MainUI } from './components/MainUI';
-import { easyQueries } from './constants';
+import { SetupModal } from './components/SetupModal';
+import { queries } from './utils/constants';
 
 type GameState = 'loading' | 'welcome' | 'main';
 
-// Mock initial data
-const mockSystemOutput = `Welcome to SQL Adventure!
-Current Challenge: Query the users table to find all users who made a purchase.
-Available Tables: users, orders
-Type your first query to begin...`;
-
 const mockSchemas = [
-  { 
-    name: 'users', 
-    columns: ['id', 'name', 'email', 'created_at']
+  {
+    name: 'users',
+    columns: ['id', 'name', 'email', 'created_at'],
   },
-  { 
-    name: 'orders', 
-    columns: ['id', 'user_id', 'total', 'status', 'order_date']
-  }
+  {
+    name: 'orders',
+    columns: ['id', 'user_id', 'total', 'status', 'order_date'],
+  },
 ];
 
 function App() {
@@ -39,16 +32,14 @@ function App() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Handle setup form completion
+  // since we used a fetch request to the server,
+  // we've already passed theme and concepts to the server
   const handleSetupComplete = (output: string) => {
-    const action = parseInt(output, 10) as keyof typeof easyQueries;
-    const narrative = easyQueries[action]?.storyNarrative;
+    const action = parseInt(output, 10) as keyof typeof queries;
+    const narrative = queries[action]?.storyNarrative;
     setSystemOutput(`Task ${action}: ${narrative}`);
     setIsSetupModalOpen(false);
-    setGameState('main');
-  };
-
-  const handleQuickStart = () => {
-    setSystemOutput(mockSystemOutput);
     setGameState('main');
   };
 
@@ -58,7 +49,6 @@ function App() {
       
       {gameState === 'welcome' && (
         <WelcomeScreen 
-          onStart={handleQuickStart}
           onCustomSetup={() => setIsSetupModalOpen(true)} 
         />
       )}

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Send, Database } from 'lucide-react';
 import { MasteryProgress } from './MasteryProgress';
-import { easyQueries } from '../constants';
+import { queries } from '../utils/constants';
+import { getGeneratedQuery } from '../utils/llmService';
 
 interface Schema {
   name: string;
@@ -42,9 +43,10 @@ export function MainUI({ initialOutput, initialSchemas }: MainUIProps) {
       });
 
       const data = await response.json();
-      const action = parseInt(data.action, 10) as keyof typeof easyQueries;
-      const narrative = easyQueries[action]?.storyNarrative;      
-      setOutput(`Task ${action}: ${narrative}`);
+      const action = parseInt(data.action, 10) as keyof typeof queries;
+      // const narrative = easyQueries[action]?.storyNarrative;
+      const narrative = await getGeneratedQuery(queries[action]?.storyNarrative, queries[action]?.branchName, JSON.stringify(queries[action]?.expected));      
+      setOutput(`Task ${action}:\n${narrative}`);
       const newMastery = data.newMastery;
       // Simulate mastery progress update
       setMasteryLevels(() => {

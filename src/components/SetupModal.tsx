@@ -8,11 +8,19 @@ interface SetupModalProps {
 }
 
 export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
-  const [username, setUsername] = useState('');
-  const [difficulty, setDifficulty] = useState('medium');
+  const [theme, setTheme] = useState<'cyberpunk' | 'fantasy' | 'real-world'>('cyberpunk');
+
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  const [concepts, setConcepts] = useState<string[]>([]);
+  const allConcepts = ['Basic Queries', 'Joins', 'Aggregations', 'Subqueries', 'Window Functions', 'Transactions'];
+
+  function toggleConcept(concept: string) {
+    setConcepts((prev) =>
+      prev.includes(concept) ? prev.filter((c) => c !== concept) : [...prev, concept]
+    );
+  }
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,7 +32,7 @@ export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
       const response = await fetch('http://localhost:3000/setup-form', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, difficulty }),
+        body: JSON.stringify({ theme, concepts }),
         mode: 'cors',
       });
 
@@ -51,9 +59,13 @@ export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
       try {
         const csv = event.target?.result as string;
         // Process CSV here
-        // For now, just set username from first line
-        const [firstLine] = csv.split('\n');
-        setUsername(firstLine.trim());
+        // CSV format: masteryOfConcept1,masteryOfConcept2,...masteryOfConceptN
+        // e.g. 0.8,0.6,0.4,0.9,0.7,0.5
+        // pass the mastery levels to the server
+        const concepts = csv.split(',').map((c) => c.trim());
+        if (concepts.length !== allConcepts.length) {
+          throw new Error('Inconsistent number of concepts provided');
+        }
       } catch (err) {
         setError('Invalid CSV format');
       }
@@ -80,27 +92,41 @@ export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* (2) Single choice for theme */}
           <div>
-            <label className="block text-sm font-medium mb-1">Username</label>
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
+            <label className="block text-sm font-medium mb-1">Theme</label>
+            <div className="flex space-x-2">
+              {(['cyberpunk', 'fantasy', 'real-world'] as const).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setTheme(t)}
+                  className={`px-3 py-2 rounded-lg ${
+                    theme === t ? 'bg-blue-500' : 'bg-gray-700'
+                  }`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
           </div>
 
+          {/* (4) Multi-choice for concepts */}
           <div>
-            <label className="block text-sm font-medium mb-1">Difficulty</label>
-            <select
-              value={difficulty}
-              onChange={(e) => setDifficulty(e.target.value)}
-              className="w-full px-3 py-2 bg-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="easy">Easy</option>
-              <option value="medium">Medium</option>
-              <option value="hard">Hard</option>
-            </select>
+            <label className="block text-sm font-medium mb-1">Concepts</label>
+            <div className="grid grid-cols-2 gap-2">
+              {allConcepts.map((concept) => (
+                <label key={concept} className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={concepts.includes(concept)}
+                    onChange={() => toggleConcept(concept)}
+                    className="form-checkbox h-5 w-5 text-blue-600"
+                  />
+                  <span>{concept}</span>
+                </label>
+              ))}
+            </div>
           </div>
 
           <div className="relative">
