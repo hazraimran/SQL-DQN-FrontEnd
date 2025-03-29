@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { Send, Database } from 'lucide-react';
 import { MasteryProgress } from './MasteryProgress';
 import { queries } from '../utils/constants';
@@ -12,9 +13,15 @@ interface Schema {
 interface MainUIProps {
   initialOutput: string;
   initialSchemas: Schema[];
+  // NEW: Add optional theme in case you want to pass it from App
+  theme?: 'cyberpunk' | 'fantasy' | 'real-world';
 }
 
-export function MainUI({ initialOutput, initialSchemas }: MainUIProps) {
+export function MainUI({
+  initialOutput,
+  initialSchemas,
+  theme = 'cyberpunk', // default if not passed
+}: MainUIProps) {
   const [output, setOutput] = useState(initialOutput);
   const [input, setInput] = useState('');
   const [schemas, setSchemas] = useState(initialSchemas);
@@ -41,33 +48,51 @@ export function MainUI({ initialOutput, initialSchemas }: MainUIProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userQuery: input }),
       });
+      if (!response.ok) {
+        throw new Error('Failed to execute query in MainUI - handleSubmit');
+      }
 
       const data = await response.json();
-      const action = parseInt(data.action, 10) as keyof typeof queries;
-      // const narrative = easyQueries[action]?.storyNarrative;
-      const narrative = await getGeneratedQuery(queries[action]?.storyNarrative, queries[action]?.branchName, JSON.stringify(queries[action]?.expected));      
-      setOutput(`Task ${action}:\n${narrative}`);
+      const actionNum  = parseInt(data.action, 10);
+      // 1) Read schema from queries[theme][actionNum].tables
+      const newSchema = queries[theme]?.[actionNum]?.tables || [];
+      setSchemas(newSchema);
+      // 2) Pass data to getGeneratedQuery
+      const narrative = await getGeneratedQuery(
+        theme,
+        (queries[theme] as Record<number, typeof queries[keyof typeof queries][number]>)[actionNum].branchName,
+        (queries[theme] as Record<number, typeof queries[keyof typeof queries][number]>)[actionNum].tables,
+        (queries[theme] as Record<number, typeof queries[keyof typeof queries][number]>)[actionNum].expected
+      );
+      console.log('Generated narrative from MainUI:', narrative);
+
+      // 3) setOutput with Markdown content
+      setOutput(`**Task ${actionNum}:**\n\n${narrative.toString()}`);
+
+      // Update mastery
       const newMastery = data.newMastery;
-      // Simulate mastery progress update
       setMasteryLevels(() => {
         const newLevels = [...newMastery];
         return newLevels;
       });
-      
+
+      // Clear input after processing
       setInput('');
-    } catch (err) {
-      setOutput('Error: Failed to execute query');
+    } catch {
+      setOutput('Error: Failed to execute query in MainUI - handleSubmit as a whole');
     }
   };
 
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
       <div className="space-y-4">
-        {/* System Output */}
+        {/* System Output as Markdown */}
         <div className="h-[60vh] bg-gray-800 rounded-xl p-4 overflow-auto">
-          <pre className="font-mono text-green-400 whitespace-pre-wrap">
-            {output || 'No output yet...'}
-          </pre>
+          <div className="prose prose-invert">
+            <ReactMarkdown>
+              {output || 'No output yet...'}
+            </ReactMarkdown>
+          </div>
         </div>
 
         {/* Query Input */}
@@ -92,7 +117,7 @@ export function MainUI({ initialOutput, initialSchemas }: MainUIProps) {
         {/* Mastery Progress */}
         <MasteryProgress masteryLevels={masteryLevels} />
 
-        {/* Schema */}
+        {/* Schema from queries[theme][action].tables */}
         <div className="bg-gray-800 rounded-xl p-4">
           <h3 className="text-xl font-semibold mb-4 flex items-center">
             <Database className="w-5 h-5 mr-2" />

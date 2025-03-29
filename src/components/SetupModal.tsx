@@ -4,12 +4,11 @@ import { Upload, X } from 'lucide-react';
 interface SetupModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onComplete: (output: string) => void;
+  onComplete: (payload: { theme: 'cyberpunk' | 'fantasy' | 'real-world'; action: string }) => void;
 }
 
 export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
   const [theme, setTheme] = useState<'cyberpunk' | 'fantasy' | 'real-world'>('cyberpunk');
-
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -21,6 +20,7 @@ export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
       prev.includes(concept) ? prev.filter((c) => c !== concept) : [...prev, concept]
     );
   }
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,12 +37,13 @@ export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
       });
 
       if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error);
+        const errorText = await response.text();
+        throw new Error(errorText);
       }
 
       const data = await response.json();
-      onComplete(data.action);
+      // Pass both theme and action to the parent
+      onComplete({ theme, action: data.action });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -58,13 +59,12 @@ export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
     reader.onload = async (event) => {
       try {
         const csv = event.target?.result as string;
-        // Process CSV here
         // CSV format: masteryOfConcept1,masteryOfConcept2,...masteryOfConceptN
         // e.g. 0.8,0.6,0.4,0.9,0.7,0.5
-        // pass the mastery levels to the server
-        const concepts = csv.split(',').map((c) => c.trim());
-        if (concepts.length !== allConcepts.length) {
-          throw new Error('Inconsistent number of concepts provided');
+        // pass the mastery levels or concepts to the server if needed
+        const lines = csv.split(',').map((c) => c.trim());
+        if (lines.length !== allConcepts.length) {
+          throw new Error('Inconsistent number of concepts.');
         }
       } catch (err) {
         setError('Invalid CSV format');
@@ -92,7 +92,6 @@ export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* (2) Single choice for theme */}
           <div>
             <label className="block text-sm font-medium mb-1">Theme</label>
             <div className="flex space-x-2">
@@ -111,7 +110,6 @@ export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
             </div>
           </div>
 
-          {/* (4) Multi-choice for concepts */}
           <div>
             <label className="block text-sm font-medium mb-1">Concepts</label>
             <div className="grid grid-cols-2 gap-2">

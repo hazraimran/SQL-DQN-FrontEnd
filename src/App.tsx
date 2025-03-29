@@ -4,6 +4,7 @@ import { LoadingScreen } from './components/LoadingScreen';
 import { MainUI } from './components/MainUI';
 import { SetupModal } from './components/SetupModal';
 import { queries } from './utils/constants';
+import { getGeneratedQuery } from './utils/llmService';
 
 type GameState = 'loading' | 'welcome' | 'main';
 
@@ -35,10 +36,15 @@ function App() {
   // Handle setup form completion
   // since we used a fetch request to the server,
   // we've already passed theme and concepts to the server
-  const handleSetupComplete = (output: string) => {
-    const action = parseInt(output, 10) as keyof typeof queries;
-    const narrative = queries[action]?.storyNarrative;
-    setSystemOutput(`Task ${action}: ${narrative}`);
+  const handleSetupComplete = async ({ theme, action }: { theme: keyof typeof queries; action: string }) => {
+    const actionNumber = parseInt(action, 10);
+    const narrative = await getGeneratedQuery(
+      theme,
+      (queries[theme] as Record<number, typeof queries[keyof typeof queries][number]>)[actionNumber].branchName,
+      (queries[theme] as Record<number, typeof queries[keyof typeof queries][number]>)[actionNumber].tables,
+      (queries[theme] as Record<number, typeof queries[keyof typeof queries][number]>)[actionNumber].expected
+    );
+    setSystemOutput(`Task ${actionNumber}: ${narrative}`);
     setIsSetupModalOpen(false);
     setGameState('main');
   };
@@ -46,21 +52,21 @@ function App() {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       {gameState === 'loading' && <LoadingScreen />}
-      
+
       {gameState === 'welcome' && (
-        <WelcomeScreen 
-          onCustomSetup={() => setIsSetupModalOpen(true)} 
+        <WelcomeScreen
+          onCustomSetup={() => setIsSetupModalOpen(true)}
         />
       )}
-      
+
       {gameState === 'main' && (
-        <MainUI 
+        <MainUI
           initialOutput={systemOutput}
           initialSchemas={mockSchemas}
         />
       )}
 
-      <SetupModal 
+      <SetupModal
         isOpen={isSetupModalOpen}
         onClose={() => setIsSetupModalOpen(false)}
         onComplete={handleSetupComplete}
