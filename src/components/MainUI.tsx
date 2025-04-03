@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Send, Database } from 'lucide-react';
+import { Send, Database, Wand } from 'lucide-react';
 import { MasteryProgress } from './MasteryProgress';
 import { queries } from '../utils/constants';
 import { getGeneratedQuery } from '../utils/llmService';
@@ -13,73 +13,64 @@ interface Schema {
 interface MainUIProps {
   initialOutput: string;
   initialSchemas: Schema[];
-  // NEW: Add optional theme in case you want to pass it from App
-  theme?: 'cyberpunk' | 'fantasy' | 'real-world';
+  theme: string;
+  concepts: string[];
+  actionNumber: number;
 }
 
 export function MainUI({
   initialOutput,
   initialSchemas,
-  theme = 'cyberpunk', // default if not passed
+  theme,
+  concepts,
+  actionNumber,
 }: MainUIProps) {
   const [output, setOutput] = useState(initialOutput);
   const [input, setInput] = useState('');
   const [schemas, setSchemas] = useState(initialSchemas);
-  const [masteryLevels, setMasteryLevels] = useState([
-    0.6, // Basic Queries
-    0.6, // Joins
-    0.6, // Aggregations
-    0.6, // Subqueries
-    0.6, // Window Functions
-    0.6, // Indexes
-    0.6, // Transactions
-    0.6, // Views
-    0.6, // Stored Procedures
-    0.6  // Triggers
-  ]);
+  const [masteryLevels, setMasteryLevels] = useState([0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Pick styles/icons based on theme
+  const IconToUse = theme === 'fantasy' ? Wand : Database;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
 
     try {
+      setIsLoading(true);
+      const expected = (queries[theme] as Record<number, typeof queries[keyof typeof queries][number]>)[actionNumber].expected;
       const response = await fetch('http://localhost:3000/submit-query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userQuery: input }),
+        body: JSON.stringify({ userQuery: input, expected }),
       });
       if (!response.ok) {
         throw new Error('Failed to execute query in MainUI - handleSubmit');
       }
 
       const data = await response.json();
-      const actionNum  = parseInt(data.action, 10);
-      // 1) Read schema from queries[theme][actionNum].tables
-      const newSchema = queries[theme]?.[actionNum]?.tables || [];
+      actionNumber = parseInt(data.action, 10);
+      const newSchema = queries[theme][actionNumber].tables || [];
       setSchemas(newSchema);
-      // 2) Pass data to getGeneratedQuery
+
       const narrative = await getGeneratedQuery(
         theme,
-        (queries[theme] as Record<number, typeof queries[keyof typeof queries][number]>)[actionNum].branchName,
-        (queries[theme] as Record<number, typeof queries[keyof typeof queries][number]>)[actionNum].tables,
-        (queries[theme] as Record<number, typeof queries[keyof typeof queries][number]>)[actionNum].expected
+        (queries[theme] as Record<number, typeof queries[keyof typeof queries][number]>)[actionNumber].branchName,
+        (queries[theme] as Record<number, typeof queries[keyof typeof queries][number]>)[actionNumber].tables,
+        (queries[theme] as Record<number, typeof queries[keyof typeof queries][number]>)[actionNumber].expected
       );
-      console.log('Generated narrative from MainUI:', narrative);
+      setOutput(`**Task ${actionNumber + 1}:**\n\n${narrative}`);
 
-      // 3) setOutput with Markdown content
-      setOutput(`**Task ${actionNum}:**\n\n${narrative.toString()}`);
-
-      // Update mastery
       const newMastery = data.newMastery;
-      setMasteryLevels(() => {
-        const newLevels = [...newMastery];
-        return newLevels;
-      });
-
-      // Clear input after processing
+      console.log('New Mastery Levels:', newMastery);
+      setMasteryLevels([...newMastery]);
       setInput('');
     } catch {
       setOutput('Error: Failed to execute query in MainUI - handleSubmit as a whole');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -87,16 +78,14 @@ export function MainUI({
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
       <div className="space-y-4">
         {/* System Output as Markdown */}
-        <div className="h-[60vh] bg-gray-800 rounded-xl p-4 overflow-auto">
+        <div className="h-[60vh] rounded-xl p-4 overflow-auto bg-gray-800">
           <div className="prose prose-invert">
-            <ReactMarkdown>
-              {output || 'No output yet...'}
-            </ReactMarkdown>
+            <ReactMarkdown>{output || 'No output yet...'}</ReactMarkdown>
           </div>
         </div>
 
         {/* Query Input */}
-        <form onSubmit={handleSubmit} className="flex gap-2">
+        <form onSubmit={handleSubmit} className="flex gap-2 items-center">
           <input
             type="text"
             value={input}
@@ -106,21 +95,28 @@ export function MainUI({
           />
           <button
             type="submit"
-            className="px-4 py-2 bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors"
+            disabled={isLoading}
+            className="px-4 py-2 bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
           >
             <Send className="w-5 h-5" />
           </button>
+          {isLoading && (
+            <div
+              className="w-4 h-4 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"
+              title="Generating next query..."
+            />
+          )}
         </form>
       </div>
 
       <div className="space-y-4">
         {/* Mastery Progress */}
-        <MasteryProgress masteryLevels={masteryLevels} />
+        <MasteryProgress concepts={concepts} masteryLevels={masteryLevels} />
 
         {/* Schema from queries[theme][action].tables */}
         <div className="bg-gray-800 rounded-xl p-4">
           <h3 className="text-xl font-semibold mb-4 flex items-center">
-            <Database className="w-5 h-5 mr-2" />
+            <IconToUse className="w-5 h-5 mr-2" />
             SQL Schemas
           </h3>
           <div className="space-y-4">

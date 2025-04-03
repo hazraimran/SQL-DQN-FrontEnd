@@ -1,10 +1,11 @@
 import { Trophy } from 'lucide-react';
 
 interface MasteryProgressProps {
+  concepts: string[];
   masteryLevels: number[];
 }
 
-export function MasteryProgress({ masteryLevels }: MasteryProgressProps) {
+export function MasteryProgress({ concepts, masteryLevels }: MasteryProgressProps) {
   const totalProgress = masteryLevels.reduce((sum, level) => sum + level, 0) / masteryLevels.length * 100;
 
   return (
@@ -17,7 +18,7 @@ export function MasteryProgress({ masteryLevels }: MasteryProgressProps) {
         <span className="text-gray-400">{Math.round(totalProgress)}% Complete</span>
       </div>
 
-      <div className="grid grid-cols-10 gap-2 mb-4">
+      <div className="grid grid-cols-10 gap-2 mb-8">
         {masteryLevels.map((level, index) => (
           <div key={index} className="relative">
             <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
@@ -34,11 +35,19 @@ export function MasteryProgress({ masteryLevels }: MasteryProgressProps) {
       </div>
 
       <div className="space-y-2">
-        {masteryLevels.map((level, index) => (
+        {concepts.map((concept, index) => (
           <div key={index} className="flex items-center justify-between text-sm">
-            <span className="text-gray-400">Concept {index + 1}</span>
-            <span className={`font-medium ${level >= 0.8 ? 'text-green-400' : level >= 0.5 ? 'text-yellow-400' : 'text-blue-400'}`}>
-              {Math.round(level * 100)}%
+            <span className="text-gray-400">{`Concept ${index + 1}: ${concept}`}</span>
+            <span
+              className={`font-medium ${
+                masteryLevels[index] >= 0.8
+                  ? 'text-green-400'
+                  : masteryLevels[index] >= 0.5
+                  ? 'text-yellow-400'
+                  : 'text-blue-400'
+              }`}
+            >
+              {Math.round(masteryLevels[index] * 100)}%
             </span>
           </div>
         ))}

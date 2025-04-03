@@ -8,21 +8,13 @@ import { getGeneratedQuery } from './utils/llmService';
 
 type GameState = 'loading' | 'welcome' | 'main';
 
-const mockSchemas = [
-  {
-    name: 'users',
-    columns: ['id', 'name', 'email', 'created_at'],
-  },
-  {
-    name: 'orders',
-    columns: ['id', 'user_id', 'total', 'status', 'order_date'],
-  },
-];
-
 function App() {
   const [gameState, setGameState] = useState<GameState>('loading');
   const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
   const [systemOutput, setSystemOutput] = useState('');
+  const [theme, setTheme] = useState('cyberpunk' as 'cyberpunk' | 'fantasy' | 'real-world');
+  const [concepts, setConcepts] = useState<string[]>([]);
+  const [actionNumber, setActionNumber] = useState(0);
 
   useEffect(() => {
     // Simulate initial loading
@@ -35,16 +27,22 @@ function App() {
 
   // Handle setup form completion
   // since we used a fetch request to the server,
-  // we've already passed theme and concepts to the server
-  const handleSetupComplete = async ({ theme, action }: { theme: keyof typeof queries; action: string }) => {
+  // we've already passed theme and concepts to the backend
+  // and received the action number in response.
+  const handleSetupComplete = async ({ theme: chosenTheme, concepts, action }: { theme: 'cyberpunk' | 'fantasy' | 'real-world'; concepts: string[]; action: string }) => {
+    setTheme(chosenTheme);
+    setConcepts(concepts);
+
     const actionNumber = parseInt(action, 10);
+    setActionNumber(actionNumber);
+
     const narrative = await getGeneratedQuery(
-      theme,
-      (queries[theme] as Record<number, typeof queries[keyof typeof queries][number]>)[actionNumber].branchName,
-      (queries[theme] as Record<number, typeof queries[keyof typeof queries][number]>)[actionNumber].tables,
-      (queries[theme] as Record<number, typeof queries[keyof typeof queries][number]>)[actionNumber].expected
+      chosenTheme,
+      (queries[chosenTheme] as Record<number, typeof queries[keyof typeof queries][number]>)[actionNumber].branchName,
+      (queries[chosenTheme] as Record<number, typeof queries[keyof typeof queries][number]>)[actionNumber].tables,
+      (queries[chosenTheme] as Record<number, typeof queries[keyof typeof queries][number]>)[actionNumber].expected
     );
-    setSystemOutput(`Task ${actionNumber}: ${narrative}`);
+    setSystemOutput(`Task ${actionNumber + 1}: ${narrative}`);
     setIsSetupModalOpen(false);
     setGameState('main');
   };
@@ -59,10 +57,13 @@ function App() {
         />
       )}
 
-      {gameState === 'main' && (
+      {gameState === 'main' && theme && (
         <MainUI
           initialOutput={systemOutput}
-          initialSchemas={mockSchemas}
+          initialSchemas={queries[theme][actionNumber].tables}
+          theme={theme}
+          concepts={concepts}
+          actionNumber={actionNumber}
         />
       )}
 

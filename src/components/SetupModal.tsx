@@ -4,7 +4,11 @@ import { Upload, X } from 'lucide-react';
 interface SetupModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onComplete: (payload: { theme: 'cyberpunk' | 'fantasy' | 'real-world'; action: string }) => void;
+  onComplete: (payload: {
+    theme: 'cyberpunk' | 'fantasy' | 'real-world';
+    concepts: string[];
+    action: string;
+  }) => void;
 }
 
 export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
@@ -13,7 +17,19 @@ export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const [concepts, setConcepts] = useState<string[]>([]);
-  const allConcepts = ['Basic Queries', 'Joins', 'Aggregations', 'Subqueries', 'Window Functions', 'Transactions'];
+
+  const allConcepts = [
+    'basic SELECT and FROM',
+    'basic WHERE clause',
+    'pattern matching with LIKE',
+    'handle NULL values',
+    'ORDER BY clause',
+    'INSERT Statement',
+    'UPDATE Statement',
+    'DELETE Statement',
+    'basic JOIN usage (INNER JOIN)',
+    'basic TRANSACTION usage (ROLLBACK)',
+  ];
 
   function toggleConcept(concept: string) {
     setConcepts((prev) =>
@@ -32,7 +48,7 @@ export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
       const response = await fetch('http://localhost:3000/setup-form', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ theme, concepts }),
+        body: JSON.stringify({ conceptsLength: concepts.length }),
         mode: 'cors',
       });
 
@@ -42,8 +58,8 @@ export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
       }
 
       const data = await response.json();
-      // Pass both theme and action to the parent
-      onComplete({ theme, action: data.action });
+      // Pass theme, concepts and action to the parent
+      onComplete({ theme, concepts, action: data.action });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -75,22 +91,23 @@ export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-gray-800 rounded-xl p-8 max-w-md w-full mx-4 relative">
+      {/* Changed max-w-md to max-w-2xl to increase window size */}
+      <div className="bg-gray-800 rounded-xl p-8 max-w-2xl w-full mx-4 relative">
         <button
           onClick={onClose}
           className="absolute right-4 top-4 text-gray-400 hover:text-white"
         >
           <X className="w-6 h-6" />
         </button>
-
+  
         <h2 className="text-2xl font-bold mb-6">Game Setup</h2>
-
+  
         {error && (
           <div className="mb-4 p-3 bg-red-500/20 border border-red-500 rounded-lg text-red-400">
             {error}
           </div>
         )}
-
+  
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">Theme</label>
@@ -150,7 +167,11 @@ export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
             className="w-full py-2 bg-blue-500 rounded-lg font-medium hover:bg-blue-600
                      disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {isLoading ? 'Setting up...' : 'Start Game'}
+            {isLoading ? (
+              <span className="ml-2 inline-block w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin"></span>
+            ) : (
+              'Start Game'
+            )}
           </button>
         </form>
       </div>

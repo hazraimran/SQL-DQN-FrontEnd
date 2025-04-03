@@ -1,3 +1,16 @@
+const branchNames = [
+    "basic SELECT and FROM",
+    "basic WHERE clause",
+    "pattern matching with LIKE",
+    "handle NULL values",
+    "ORDER BY clause",
+    "INSERT Statement",
+    "UPDATE Statement",
+    "DELETE Statement",
+    "basic JOIN usage (INNER JOIN)",
+    "basic TRANSACTION usage (ROLLBACK)",
+];
+
 export const queries: Record<
     string,
     Record<
@@ -11,8 +24,8 @@ export const queries: Record<
     >
 > = {
     cyberpunk: {
-        1: {
-            branchName: "basic SELECT and FROM",
+        0: {
+            branchName: branchNames[0],
             tables: [
                 {
                     name: "residue",
@@ -26,21 +39,21 @@ export const queries: Record<
                 // { name: 'Morpheus', status: 'Captain' },
             ],
         },
-        2: {
-            branchName: "basic WHERE clause",
+        1: {
+            branchName: branchNames[1],
             tables: [
-              {
-                  name: "residue",
-                  columns: ["name", "status"],
-              },
+                {
+                    name: "residue",
+                    columns: ["name", "status"],
+                },
             ],
             expected: [
                 { name: "Neo", status: "PotentialRebel" },
                 { name: "Trinity", status: "PotentialRebel" },
             ],
         },
-        3: {
-            branchName: "pattern matching with LIKE",
+        2: {
+            branchName: branchNames[2],
             tables: [
                 {
                     name: "residue",
@@ -49,8 +62,8 @@ export const queries: Record<
             ],
             expected: [{ name: "Trinity", status: "PotentialRebel" }],
         },
-        4: {
-            branchName: "handle NULL values",
+        3: {
+            branchName: branchNames[3],
             tables: [
                 {
                     name: "residue",
@@ -59,8 +72,8 @@ export const queries: Record<
             ],
             expected: [{ name: "Jane Doe", status: null }],
         },
-        5: {
-            branchName: "ORDER BY clause",
+        4: {
+            branchName: branchNames[4],
             tables: [
                 {
                     name: "residue",
@@ -74,8 +87,8 @@ export const queries: Record<
                 { name: "Trinity", status: "PotentialRebel" },
             ],
         },
-        6: {
-            branchName: "INSERT Statement",
+        5: {
+            branchName: branchNames[5],
             tables: [
                 {
                     name: "residue",
@@ -84,8 +97,8 @@ export const queries: Record<
             ],
             expected: ["INSERT 0 1"],
         },
-        7: {
-            branchName: "UPDATE Statement",
+        6: {
+            branchName: branchNames[6],
             tables: [
                 {
                     name: "residue",
@@ -94,8 +107,8 @@ export const queries: Record<
             ],
             expected: ["UPDATE 1"],
         },
-        8: {
-            branchName: "DELETE Statement",
+        7: {
+            branchName: branchNames[7],
             tables: [
                 {
                     name: "residue",
@@ -104,8 +117,8 @@ export const queries: Record<
             ],
             expected: ["DELETE 1"],
         },
-        9: {
-            branchName: "basic TRANSACTION usage (ROLLBACK)",
+        8: {
+            branchName: branchNames[8],
             tables: [
                 {
                     name: "residue",
@@ -114,8 +127,8 @@ export const queries: Record<
             ],
             expected: ["START TRANSACTION", "ROLLBACK"],
         },
-        10: {
-            branchName: "basic TRANSACTION usage (COMMIT)",
+        9: {
+            branchName: branchNames[9],
             tables: [
                 {
                     name: "residue",
@@ -127,8 +140,8 @@ export const queries: Record<
     },
 
     fantasy: {
-        1: {
-            branchName: "basic SELECT and FROM",
+        0: {
+            branchName: branchNames[0],
             tables: [
                 {
                     name: "rings",
@@ -142,8 +155,18 @@ export const queries: Record<
                 { name: "The Seven Rings", status: "Dwarven" },
             ],
         },
+        1: {
+            branchName: branchNames[1],
+            tables: [
+                {
+                    name: "rings",
+                    columns: ["name", "status"],
+                },
+            ],
+            expected: [{ name: "The One Ring", status: "Precious" }],
+        },
         2: {
-            branchName: "basic WHERE clause",
+            branchName: branchNames[2],
             tables: [
                 {
                     name: "rings",
@@ -153,17 +176,7 @@ export const queries: Record<
             expected: [{ name: "The One Ring", status: "Precious" }],
         },
         3: {
-            branchName: "pattern matching with LIKE",
-            tables: [
-                {
-                    name: "rings",
-                    columns: ["name", "status"],
-                },
-            ],
-            expected: [{ name: "The One Ring", status: "Precious" }],
-        },
-        4: {
-            branchName: "handle NULL values",
+            branchName: branchNames[3],
             tables: [
                 {
                     name: "rings",
@@ -172,8 +185,8 @@ export const queries: Record<
             ],
             expected: [{ name: "The Two Rings", status: null }],
         },
-        5: {
-            branchName: "ORDER BY clause",
+        4: {
+            branchName: branchNames[4],
             tables: [
                 {
                     name: "rings",
@@ -187,8 +200,8 @@ export const queries: Record<
                 { name: "The Two Rings", status: "Powerful" },
             ],
         },
-        6: {
-            branchName: "INSERT Statement",
+        5: {
+            branchName: branchNames[5],
             tables: [
                 {
                     name: "rings",
@@ -197,8 +210,8 @@ export const queries: Record<
             ],
             expected: ["INSERT 0 1"],
         },
-        7: {
-            branchName: "UPDATE Statement",
+        6: {
+            branchName: branchNames[6],
             tables: [
                 {
                     name: "rings",
@@ -207,8 +220,8 @@ export const queries: Record<
             ],
             expected: ["UPDATE 1"],
         },
-        8: {
-            branchName: "DELETE Statement",
+        7: {
+            branchName: branchNames[7],
             tables: [
                 {
                     name: "rings",
@@ -217,8 +230,8 @@ export const queries: Record<
             ],
             expected: ["DELETE 1"],
         },
-        9: {
-            branchName: "basic TRANSACTION usage (ROLLBACK)",
+        8: {
+            branchName: branchNames[8],
             tables: [
                 {
                     name: "rings",
@@ -227,8 +240,8 @@ export const queries: Record<
             ],
             expected: ["START TRANSACTION", "ROLLBACK"],
         },
-        10: {
-            branchName: "basic TRANSACTION usage (COMMIT)",
+        9: {
+            branchName: branchNames[9],
             tables: [
                 {
                     name: "rings",
@@ -240,8 +253,8 @@ export const queries: Record<
     },
 
     "real-world": {
-        1: {
-            branchName: "basic SELECT and FROM",
+        0: {
+            branchName: branchNames[0],
             tables: [
                 {
                     name: "movies",
@@ -255,8 +268,8 @@ export const queries: Record<
                 { name: "Harry Potter", genre: "Fantasy" },
             ],
         },
-        2: {
-            branchName: "basic WHERE clause",
+        1: {
+            branchName: branchNames[1],
             tables: [
                 {
                     name: "movies",
@@ -268,8 +281,8 @@ export const queries: Record<
                 { name: "2077", status: "Cyberpunk" },
             ],
         },
-        3: {
-            branchName: "pattern matching with LIKE",
+        2: {
+            branchName: branchNames[2],
             tables: [
                 {
                     name: "movies",
@@ -278,8 +291,8 @@ export const queries: Record<
             ],
             expected: [{ name: "Matrix", genre: "Cyberpunk" }],
         },
-        4: {
-            branchName: "handle NULL values",
+        3: {
+            branchName: branchNames[3],
             tables: [
                 {
                     name: "movies",
@@ -288,8 +301,8 @@ export const queries: Record<
             ],
             expected: [{ name: "The Lord of the Rings", status: null }],
         },
-        5: {
-            branchName: "ORDER BY clause",
+        4: {
+            branchName: branchNames[4],
             tables: [
                 {
                     name: "movies",
@@ -303,8 +316,8 @@ export const queries: Record<
                 { name: "The Lord of the Rings", status: "Fantasy" },
             ],
         },
-        6: {
-            branchName: "INSERT Statement",
+        5: {
+            branchName: branchNames[5],
             tables: [
                 {
                     name: "movies",
@@ -313,8 +326,8 @@ export const queries: Record<
             ],
             expected: ["INSERT 0 1"],
         },
-        7: {
-            branchName: "UPDATE Statement",
+        6: {
+            branchName: branchNames[6],
             tables: [
                 {
                     name: "movies",
@@ -323,8 +336,8 @@ export const queries: Record<
             ],
             expected: ["UPDATE 1"],
         },
-        8: {
-            branchName: "DELETE Statement",
+        7: {
+            branchName: branchNames[7],
             tables: [
                 {
                     name: "movies",
@@ -333,8 +346,8 @@ export const queries: Record<
             ],
             expected: ["DELETE 1"],
         },
-        9: {
-            branchName: "basic TRANSACTION usage (ROLLBACK)",
+        8: {
+            branchName: branchNames[8],
             tables: [
                 {
                     name: "movies",
@@ -343,8 +356,8 @@ export const queries: Record<
             ],
             expected: ["START TRANSACTION", "ROLLBACK"],
         },
-        10: {
-            branchName: "basic TRANSACTION usage (COMMIT)",
+        9: {
+            branchName: branchNames[9],
             tables: [
                 {
                     name: "movies",
