@@ -3,7 +3,7 @@ import { WelcomeScreen } from './components/WelcomeScreen';
 import { LoadingScreen } from './components/LoadingScreen';
 import { MainUI } from './components/MainUI';
 import { SetupModal } from './components/SetupModal';
-import { queries } from './utils/constants';
+import { Queries } from './utils/constants';
 import { getGeneratedQuery } from './utils/llmService';
 
 type GameState = 'loading' | 'welcome' | 'main';
@@ -38,11 +38,11 @@ function App() {
 
     const narrative = await getGeneratedQuery(
       chosenTheme,
-      (queries[chosenTheme] as Record<number, typeof queries[keyof typeof queries][number]>)[actionNumber].branchName,
-      (queries[chosenTheme] as Record<number, typeof queries[keyof typeof queries][number]>)[actionNumber].tables,
-      (queries[chosenTheme] as Record<number, typeof queries[keyof typeof queries][number]>)[actionNumber].expected
+      (Queries[chosenTheme] as Record<number, typeof Queries[keyof typeof Queries][number]>)[actionNumber].concept,
+      (Queries[chosenTheme] as Record<number, typeof Queries[keyof typeof Queries][number]>)[actionNumber].input,
+      (Queries[chosenTheme] as Record<number, typeof Queries[keyof typeof Queries][number]>)[actionNumber].expected
     );
-    setSystemOutput(`Task ${actionNumber + 1}: ${narrative}`);
+    setSystemOutput(`Task ${actionNumber+1}: ${narrative}`);
     setIsSetupModalOpen(false);
     setGameState('main');
   };
@@ -60,7 +60,7 @@ function App() {
       {gameState === 'main' && theme && (
         <MainUI
           initialOutput={systemOutput}
-          initialSchemas={queries[theme][actionNumber].tables}
+          initialSchemas={Queries[theme][actionNumber].input}
           theme={theme}
           concepts={concepts}
           actionNumber={actionNumber}

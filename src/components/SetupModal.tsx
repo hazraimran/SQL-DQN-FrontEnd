@@ -1,35 +1,23 @@
 import React, { useState } from 'react';
 import { Upload, X } from 'lucide-react';
+import { AllConcepts, ThemeType } from '../utils/constants';
 
 interface SetupModalProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete: (payload: {
-    theme: 'cyberpunk' | 'fantasy' | 'real-world';
+    theme: ThemeType;
     concepts: string[];
     action: string;
   }) => void;
 }
 
 export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
-  const [theme, setTheme] = useState<'cyberpunk' | 'fantasy' | 'real-world'>('cyberpunk');
+  const [theme, setTheme] = useState<ThemeType>('cyberpunk' as ThemeType);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const [concepts, setConcepts] = useState<string[]>([]);
-
-  const allConcepts = [
-    'basic SELECT and FROM',
-    'basic WHERE clause',
-    'pattern matching with LIKE',
-    'handle NULL values',
-    'ORDER BY clause',
-    'INSERT Statement',
-    'UPDATE Statement',
-    'DELETE Statement',
-    'basic JOIN usage (INNER JOIN)',
-    'basic TRANSACTION usage (ROLLBACK)',
-  ];
 
   function toggleConcept(concept: string) {
     setConcepts((prev) =>
@@ -58,8 +46,11 @@ export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
       }
 
       const data = await response.json();
+      // sort concepts based on the order of the allConcepts array
+      const sortedConcepts = AllConcepts.filter((concept) => concepts.includes(concept));
+
       // Pass theme, concepts and action to the parent
-      onComplete({ theme, concepts, action: data.action });
+      onComplete({ theme, concepts: sortedConcepts, action: data.action });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -79,7 +70,7 @@ export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
         // e.g. 0.8,0.6,0.4,0.9,0.7,0.5
         // pass the mastery levels or concepts to the server if needed
         const lines = csv.split(',').map((c) => c.trim());
-        if (lines.length !== allConcepts.length) {
+        if (lines.length !== AllConcepts.length) {
           throw new Error('Inconsistent number of concepts.');
         }
       } catch (err) {
@@ -130,7 +121,7 @@ export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
           <div>
             <label className="block text-sm font-medium mb-1">Concepts</label>
             <div className="grid grid-cols-2 gap-2">
-              {allConcepts.map((concept) => (
+              {AllConcepts.map((concept) => (
                 <label key={concept} className="flex items-center space-x-2">
                   <input
                     type="checkbox"

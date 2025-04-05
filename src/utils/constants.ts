@@ -1,4 +1,6 @@
-const branchNames = [
+export type ThemeType = "cyberpunk" | "fantasy" | "real-world";
+
+export const AllConcepts = [
     "basic SELECT and FROM",
     "basic WHERE clause",
     "pattern matching with LIKE",
@@ -11,75 +13,271 @@ const branchNames = [
     "basic TRANSACTION usage (ROLLBACK)",
 ];
 
-export const queries: Record<
+export const ThemeTables = {
+    cyberpunk: [
+        {
+            name: "residue",
+            columns: ["name", "status"],
+            types: ["varchar(50)", "varchar(50)"],
+        },
+        {
+            name: "archives",
+            columns: ["mission_name", "mission_description"],
+            types: ["varchar(50)", "text"],
+        },
+        {
+            name: "mission_logs",
+            columns: ["mission_name", "agent_id", "reference"],
+            types: ["varchar(50)", "int", "text"],
+        },
+        {
+            name: "multi_agent_events",
+            columns: ["agent_id", "timestamp", "location", "agent_replication"],
+            types: ["int", "timestamp", "varchar(50)", "boolean"],
+        },
+    ],
+    fantasy: [
+        {
+            name: "rings",
+            columns: ["name", "profession"],
+            types: ["varchar(50)", "varchar(50)"],
+        },
+        {
+            name: "chronicles",
+            columns: ["quest_name", "quest_description"],
+            types: ["varchar(50)", "text"],
+        },
+        {
+            name: "quest_logs",
+            columns: ["quest_name", "hero_id", "reference"],
+            types: ["varchar(50)", "int", "text"],
+        },
+        {
+            name: "battle_summaries",
+            columns: ["hero_id", "timestamp", "location", "victory"],
+            types: ["int", "timestamp", "varchar(50)", "boolean"],
+        },
+    ],
+    "real-world": [
+        {
+            name: "movies",
+            columns: ["movie_name", "genre"],
+            types: ["varchar(50)", "varchar(50)"],
+        },
+        {
+            name: "reviews",
+            columns: ["movie_name", "review_text", "rating"],
+            types: ["varchar(50)", "text", "int"],
+        },
+        {
+            name: "actors",
+            columns: ["movie_name", "user_id"],
+            types: ["varchar(50)", "int"],
+        },
+        {
+            name: "collections",
+            columns: ["movie_name", "timestamp", "shared"],
+            types: ["varchar(50)", "timestamp", "boolean"],
+        },
+    ],
+};
+
+export const Queries: Record<
     string,
     Record<
         number,
         {
-            branchName: string;
-            tables: { name: string; columns: string[] }[];
-            // Changed expected to a more general structure
-            expected: Array<Record<string, any>>;
+            concept: string;
+            numOptions: number;
+            input: Array<Record<string, Record<string, any>>>;
+            expected: Array<Array<Record<string, any>>>;
         }
     >
 > = {
     cyberpunk: {
         0: {
-            branchName: branchNames[0],
-            tables: [
+            concept: AllConcepts[0],
+            numOptions: 1,
+            input: [
                 {
-                    name: "residue",
-                    columns: ["name", "status"],
+                    residue: [
+                        { name: "Neo", status: "PotentialRebel" },
+                        { name: "Trinity", status: "PotentialRebel" },
+                        { name: "Morpheus", status: "Captain" },
+                        { name: "Smith", status: "EliminationProtocol" },
+                        { name: "Jane Doe", status: null },
+                    ],
                 },
             ],
             expected: [
-                { name: "Neo", status: "PotentialRebel" },
-                { name: "Trinity", status: "PotentialRebel" },
-                { name: "Jane Doe", status: "PotentialRebel" },
-                // { name: 'Morpheus', status: 'Captain' },
+                [
+                    { name: "Neo", status: "PotentialRebel" },
+                    { name: "Trinity", status: "PotentialRebel" },
+                    { name: "Morpheus", status: "Captain" },
+                    { name: "Smith", status: "EliminationProtocol" },
+                    { name: "Jane Doe", status: null },
+                ],
             ],
         },
         1: {
-            branchName: branchNames[1],
-            tables: [
+            concept: AllConcepts[1],
+            numOptions: 2,
+            input: [
                 {
-                    name: "residue",
-                    columns: ["name", "status"],
+                    residue: [
+                        { name: "Neo", status: "PotentialRebel" },
+                        { name: "Trinity", status: "PotentialRebel" },
+                        { name: "Morpheus", status: "Captain" },
+                        { name: "Jane Doe", status: null },
+                    ]
+                },
+                {
+                    mission_logs: [
+                        {
+                            mission_name: "Free The Mind",
+                            agent_id: 1,
+                            reference: "Operation started, Morpheus leads",
+                        },
+                        {
+                            mission_name: "Free The Mind",
+                            agent_id: 1,
+                            reference: "Strange glitch observed in downtown",
+                        },
+                        {
+                            mission_name: "Defend Zion",
+                            agent_id: 5,
+                            reference: "Sentinel swarm approaching main gate",
+                        },
+                        {
+                            mission_name: "Eliminate Virus",
+                            agent_id: 4,
+                            reference:
+                                "Agent Smith anomaly flagged for investigation",
+                        },
+                    ],
                 },
             ],
             expected: [
-                { name: "Neo", status: "PotentialRebel" },
-                { name: "Trinity", status: "PotentialRebel" },
+                [
+                    { name: "Neo", status: "PotentialRebel" },
+                    { name: "Trinity", status: "PotentialRebel" },
+                ],
+                [
+                    {
+                        mission_name: "Free The Mind",
+                        agent_id: 1,
+                        reference: "Operation started, Morpheus leads",
+                    },
+                    {
+                        mission_name: "Free The Mind",
+                        agent_id: 1,
+                        reference: "Strange glitch observed in downtown",
+                    },
+                ],
             ],
         },
         2: {
-            branchName: branchNames[2],
-            tables: [
+            concept: AllConcepts[2],
+            numOptions: 1,
+            input: [
                 {
-                    name: "residue",
-                    columns: ["name", "status"],
+                    archives: [
+                        {
+                            mission_id: 1,
+                            mission_name: "Free The Mind",
+                            mission_description: "An attempt to awaken humanity.",
+                        },
+                        {
+                            mission_id: 2,
+                            mission_name: "Locate The Key-maker",
+                            mission_description:
+                                "Securing the Keymaker for the Source.",
+                        },
+                        {
+                            mission_id: 3,
+                            mission_name: "Defend Zion",
+                            mission_description:
+                                "Protect the last human city from Sentinels.",
+                        },
+                        {
+                            mission_id: 4,
+                            mission_name: "Rescue Operator",
+                            mission_description:
+                                "An operator has gone missing in the field.",
+                        },
+                        {
+                            mission_id: 5,
+                            mission_name: "Eliminate Virus",
+                            mission_description:
+                                "Suspected virus detected within the Matrix code.",
+                        },
+                    ],
                 },
             ],
-            expected: [{ name: "Trinity", status: "PotentialRebel" }],
+            expected: [
+                [
+                    {
+                        mission_id: 1,
+                        mission_name: "Free The Mind",
+                        mission_description:
+                            "An attempt to awaken humanity.",
+                    },
+                    {
+                        mission_id: 3,
+                        mission_name: "Defend Zion",
+                        mission_description:
+                            "Protect the last human city from Sentinels.",
+                    },
+                ],
+            ],
         },
         3: {
-            branchName: branchNames[3],
-            tables: [
-                {
-                    name: "residue",
-                    columns: ["name", "status"],
-                },
-            ],
+            concept: AllConcepts[3],
+            input: {
+                residue: [
+                    { name: "Neo", status: "PotentialRebel" },
+                    { name: "Trinity", status: "PotentialRebel" },
+                    { name: "Morpheus", status: "Captain" },
+                    { name: "Jane Doe", status: null },
+                ],
+            },
             expected: [{ name: "Jane Doe", status: null }],
         },
         4: {
-            branchName: branchNames[4],
-            tables: [
-                {
-                    name: "residue",
-                    columns: ["name", "status"],
-                },
-            ],
+            concept: AllConcepts[4],
+            input: {
+                archives: [
+                    {
+                        mission_id: 1,
+                        mission_name: "Free The Mind",
+                        mission_description: "An attempt to awaken humanity.",
+                    },
+                    {
+                        mission_id: 2,
+                        mission_name: "Locate The Key-maker",
+                        mission_description:
+                            "Securing the Keymaker for the Source.",
+                    },
+                    {
+                        mission_id: 3,
+                        mission_name: "Defend Zion",
+                        mission_description:
+                            "Protect the last human city from Sentinels.",
+                    },
+                    {
+                        mission_id: 4,
+                        mission_name: "Rescue Operator",
+                        mission_description:
+                            "An operator has gone missing in the field.",
+                    },
+                    {
+                        mission_id: 5,
+                        mission_name: "Eliminate Virus",
+                        mission_description:
+                            "Suspected virus detected within the Matrix code.",
+                    },
+                ],
+            },
             expected: [
                 { name: "Jane Doe", status: "PotentialRebel" },
                 { name: "Morpheus", status: "Captain" },
@@ -88,8 +286,8 @@ export const queries: Record<
             ],
         },
         5: {
-            branchName: branchNames[5],
-            tables: [
+            concept: AllConcepts[5],
+            input: [
                 {
                     name: "residue",
                     columns: ["name", "status"],
@@ -98,8 +296,8 @@ export const queries: Record<
             expected: ["INSERT 0 1"],
         },
         6: {
-            branchName: branchNames[6],
-            tables: [
+            concept: AllConcepts[6],
+            input: [
                 {
                     name: "residue",
                     columns: ["name", "status"],
@@ -108,8 +306,8 @@ export const queries: Record<
             expected: ["UPDATE 1"],
         },
         7: {
-            branchName: branchNames[7],
-            tables: [
+            concept: AllConcepts[7],
+            input: [
                 {
                     name: "residue",
                     columns: ["name", "status"],
@@ -118,8 +316,8 @@ export const queries: Record<
             expected: ["DELETE 1"],
         },
         8: {
-            branchName: branchNames[8],
-            tables: [
+            concept: AllConcepts[8],
+            input: [
                 {
                     name: "residue",
                     columns: ["name", "status"],
@@ -128,8 +326,8 @@ export const queries: Record<
             expected: ["START TRANSACTION", "ROLLBACK"],
         },
         9: {
-            branchName: branchNames[9],
-            tables: [
+            concept: AllConcepts[9],
+            input: [
                 {
                     name: "residue",
                     columns: ["name", "status"],
@@ -141,8 +339,8 @@ export const queries: Record<
 
     fantasy: {
         0: {
-            branchName: branchNames[0],
-            tables: [
+            concept: AllConcepts[0],
+            input: [
                 {
                     name: "rings",
                     columns: ["name", "status"],
@@ -156,8 +354,8 @@ export const queries: Record<
             ],
         },
         1: {
-            branchName: branchNames[1],
-            tables: [
+            concept: AllConcepts[1],
+            input: [
                 {
                     name: "rings",
                     columns: ["name", "status"],
@@ -166,8 +364,8 @@ export const queries: Record<
             expected: [{ name: "The One Ring", status: "Precious" }],
         },
         2: {
-            branchName: branchNames[2],
-            tables: [
+            concept: AllConcepts[2],
+            input: [
                 {
                     name: "rings",
                     columns: ["name", "status"],
@@ -176,8 +374,8 @@ export const queries: Record<
             expected: [{ name: "The One Ring", status: "Precious" }],
         },
         3: {
-            branchName: branchNames[3],
-            tables: [
+            concept: AllConcepts[3],
+            input: [
                 {
                     name: "rings",
                     columns: ["name", "status"],
@@ -186,8 +384,8 @@ export const queries: Record<
             expected: [{ name: "The Two Rings", status: null }],
         },
         4: {
-            branchName: branchNames[4],
-            tables: [
+            concept: AllConcepts[4],
+            input: [
                 {
                     name: "rings",
                     columns: ["name", "status"],
@@ -201,8 +399,8 @@ export const queries: Record<
             ],
         },
         5: {
-            branchName: branchNames[5],
-            tables: [
+            concept: AllConcepts[5],
+            input: [
                 {
                     name: "rings",
                     columns: ["name", "status"],
@@ -211,8 +409,8 @@ export const queries: Record<
             expected: ["INSERT 0 1"],
         },
         6: {
-            branchName: branchNames[6],
-            tables: [
+            concept: AllConcepts[6],
+            input: [
                 {
                     name: "rings",
                     columns: ["name", "status"],
@@ -221,8 +419,8 @@ export const queries: Record<
             expected: ["UPDATE 1"],
         },
         7: {
-            branchName: branchNames[7],
-            tables: [
+            concept: AllConcepts[7],
+            input: [
                 {
                     name: "rings",
                     columns: ["name", "status"],
@@ -231,8 +429,8 @@ export const queries: Record<
             expected: ["DELETE 1"],
         },
         8: {
-            branchName: branchNames[8],
-            tables: [
+            concept: AllConcepts[8],
+            input: [
                 {
                     name: "rings",
                     columns: ["name", "status"],
@@ -241,8 +439,8 @@ export const queries: Record<
             expected: ["START TRANSACTION", "ROLLBACK"],
         },
         9: {
-            branchName: branchNames[9],
-            tables: [
+            concept: AllConcepts[9],
+            input: [
                 {
                     name: "rings",
                     columns: ["name", "status"],
@@ -254,8 +452,8 @@ export const queries: Record<
 
     "real-world": {
         0: {
-            branchName: branchNames[0],
-            tables: [
+            concept: AllConcepts[0],
+            input: [
                 {
                     name: "movies",
                     columns: ["name", "status", "genre"],
@@ -269,8 +467,8 @@ export const queries: Record<
             ],
         },
         1: {
-            branchName: branchNames[1],
-            tables: [
+            concept: AllConcepts[1],
+            input: [
                 {
                     name: "movies",
                     columns: ["name", "status", "genre"],
@@ -282,8 +480,8 @@ export const queries: Record<
             ],
         },
         2: {
-            branchName: branchNames[2],
-            tables: [
+            concept: AllConcepts[2],
+            input: [
                 {
                     name: "movies",
                     columns: ["name", "status", "genre"],
@@ -292,8 +490,8 @@ export const queries: Record<
             expected: [{ name: "Matrix", genre: "Cyberpunk" }],
         },
         3: {
-            branchName: branchNames[3],
-            tables: [
+            concept: AllConcepts[3],
+            input: [
                 {
                     name: "movies",
                     columns: ["name", "status", "genre"],
@@ -302,8 +500,8 @@ export const queries: Record<
             expected: [{ name: "The Lord of the Rings", status: null }],
         },
         4: {
-            branchName: branchNames[4],
-            tables: [
+            concept: AllConcepts[4],
+            input: [
                 {
                     name: "movies",
                     columns: ["name", "status", "genre"],
@@ -317,8 +515,8 @@ export const queries: Record<
             ],
         },
         5: {
-            branchName: branchNames[5],
-            tables: [
+            concept: AllConcepts[5],
+            input: [
                 {
                     name: "movies",
                     columns: ["name", "status", "genre"],
@@ -327,8 +525,8 @@ export const queries: Record<
             expected: ["INSERT 0 1"],
         },
         6: {
-            branchName: branchNames[6],
-            tables: [
+            concept: AllConcepts[6],
+            input: [
                 {
                     name: "movies",
                     columns: ["name", "status", "genre"],
@@ -337,8 +535,8 @@ export const queries: Record<
             expected: ["UPDATE 1"],
         },
         7: {
-            branchName: branchNames[7],
-            tables: [
+            concept: AllConcepts[7],
+            input: [
                 {
                     name: "movies",
                     columns: ["name", "status", "genre"],
@@ -347,8 +545,8 @@ export const queries: Record<
             expected: ["DELETE 1"],
         },
         8: {
-            branchName: branchNames[8],
-            tables: [
+            concept: AllConcepts[8],
+            input: [
                 {
                     name: "movies",
                     columns: ["name", "status", "genre"],
@@ -357,8 +555,8 @@ export const queries: Record<
             expected: ["START TRANSACTION", "ROLLBACK"],
         },
         9: {
-            branchName: branchNames[9],
-            tables: [
+            concept: AllConcepts[9],
+            input: [
                 {
                     name: "movies",
                     columns: ["name", "status", "genre"],

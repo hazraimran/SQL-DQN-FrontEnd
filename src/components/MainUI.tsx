@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Send, Database, Wand } from 'lucide-react';
 import { MasteryProgress } from './MasteryProgress';
-import { queries } from '../utils/constants';
+import { Queries } from '../utils/constants';
 import { getGeneratedQuery } from '../utils/llmService';
 
 interface Schema {
@@ -28,8 +28,13 @@ export function MainUI({
   const [output, setOutput] = useState(initialOutput);
   const [input, setInput] = useState('');
   const [schemas, setSchemas] = useState(initialSchemas);
-  const [masteryLevels, setMasteryLevels] = useState([0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6]);
+  const [masteryLevels, setMasteryLevels] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Match mastery levels to the number of user-chosen concepts
+  useEffect(() => {
+    setMasteryLevels(concepts.map(() => 0.6)); // or 0 to start
+  }, [concepts]);
 
   // Pick styles/icons based on theme
   const IconToUse = theme === 'fantasy' ? Wand : Database;
@@ -40,7 +45,7 @@ export function MainUI({
 
     try {
       setIsLoading(true);
-      const expected = (queries[theme] as Record<number, typeof queries[keyof typeof queries][number]>)[actionNumber].expected;
+      const expected = (Queries[theme] as Record<number, typeof Queries[keyof typeof Queries][number]>)[actionNumber].expected;
       const response = await fetch('http://localhost:3000/submit-query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -52,14 +57,14 @@ export function MainUI({
 
       const data = await response.json();
       actionNumber = parseInt(data.action, 10);
-      const newSchema = queries[theme][actionNumber].tables || [];
+      const newSchema = Queries[theme][actionNumber].input || [];
       setSchemas(newSchema);
 
       const narrative = await getGeneratedQuery(
         theme,
-        (queries[theme] as Record<number, typeof queries[keyof typeof queries][number]>)[actionNumber].branchName,
-        (queries[theme] as Record<number, typeof queries[keyof typeof queries][number]>)[actionNumber].tables,
-        (queries[theme] as Record<number, typeof queries[keyof typeof queries][number]>)[actionNumber].expected
+        (Queries[theme] as Record<number, typeof Queries[keyof typeof Queries][number]>)[actionNumber].concept,
+        (Queries[theme] as Record<number, typeof Queries[keyof typeof Queries][number]>)[actionNumber].input,
+        (Queries[theme] as Record<number, typeof Queries[keyof typeof Queries][number]>)[actionNumber].expected
       );
       setOutput(`**Task ${actionNumber + 1}:**\n\n${narrative}`);
 
