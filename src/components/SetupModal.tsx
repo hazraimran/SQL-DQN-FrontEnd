@@ -53,7 +53,7 @@ export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
       onComplete({ theme, concepts: sortedConcepts, action: data.action });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
+      // Reset loading only on error
       setIsLoading(false);
     }
   };

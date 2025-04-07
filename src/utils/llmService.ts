@@ -1,21 +1,39 @@
 export async function getGeneratedQuery(
   theme: string,
-  branchName: string,
-  tables: { name: string; columns: string[] }[],
-    expected: Array<Record<string, any>>
+  concept: string,
+  input: Record<string, Record<string, any>>,
+  expected: Array<Record<string, any>>
 ): Promise<string> {
+  // Quick fix to avoid null or undefined input causing TypeError
+  const safeInput = input || {};
+
   // Create a list of tables with columns in a friendly format
-  const tablesList = tables
-    .map(
-      (tbl, idx) =>
-        `Table #${idx + 1}: "${tbl.name}" (columns: ${tbl.columns.join(', ')})`
-    )
+  const tableContents = Object.entries(safeInput)
+    .map(([tableName, tableRows]) => {
+      // For each row, build a multiline object-like string
+      const rowStrings = tableRows
+        ?.map((row: Record<string, any>) => {
+          const fields = Object.entries(row)
+            .map(([key, value]) => {
+              // Wrap string values in quotes, otherwise leave as-is
+              const formattedValue = typeof value === 'string' ? `"${value}"` : value;
+              return `    ${key}: ${formattedValue},`;
+            })
+            .join('\n');
+          return `{\n${fields}\n},\n`;
+        })
+        .join('') || '';
+
+      return `Table "${tableName}":\n${rowStrings}\n`;
+    })
     .join('\n');
+  console.log('Table contents:', tableContents);
 
   // Convert the expected result to a string, whether array or single string
   const expectedResult = Array.isArray(expected)
     ? expected.map((item) => JSON.stringify(item)).join(',\n')
     : expected;
+  console.log('Expected result:', expectedResult);
 
   // Build the LLM prompt content
   const content =
@@ -23,9 +41,9 @@ export async function getGeneratedQuery(
     'Generate a **engaging narrative within 100 words** based on a given theme. ' +
     'Your story must include:\n\n' +
     '1. An introduction to the setting or characters tied to the theme.\n' +
-    `2. A challenge or mission that can only be solved by running a ${branchName} SQL query ` +
-    'against the following table(s):\n' +
-    `${tablesList}\n\n` +
+    `2. A challenge or mission that can only be solved by running a ${concept} SQL query ` +
+    'against the following table(s) and contents:\n' +
+    `${tableContents}\n\n` +
     "3. A direct prompt asking the user (the 'player') to provide the SQL query " +
     'that returns the specified expected result.\n\n' +
     '[Details to incorporate into the story]\n' +
@@ -55,7 +73,7 @@ export async function getGeneratedQuery(
 
   const data = await response.json();
   const generatedQuery = data.choices[0].message.content;
-  console.log('Generated query:', generatedQuery);
+  // console.log('Generated query:', generatedQuery);
 
   return generatedQuery;
 }

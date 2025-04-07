@@ -9,8 +9,8 @@ export const AllConcepts = [
     "INSERT Statement",
     "UPDATE Statement",
     "DELETE Statement",
+    "basic GROUP BY and HAVING",
     "basic JOIN usage (INNER JOIN)",
-    "basic TRANSACTION usage (ROLLBACK)",
 ];
 
 export const ThemeTables = {
@@ -22,8 +22,8 @@ export const ThemeTables = {
         },
         {
             name: "archives",
-            columns: ["mission_name", "mission_description"],
-            types: ["varchar(50)", "text"],
+            columns: ["mission_id", "mission_name", "mission_description"],
+            types: ["int", "varchar(50)", "text"],
         },
         {
             name: "mission_logs",
@@ -128,29 +128,30 @@ export const Queries: Record<
                         { name: "Neo", status: "PotentialRebel" },
                         { name: "Trinity", status: "PotentialRebel" },
                         { name: "Morpheus", status: "Captain" },
+                        { name: "Smith", status: "EliminationProtocol" },
                         { name: "Jane Doe", status: null },
-                    ]
+                    ],
                 },
                 {
                     mission_logs: [
                         {
                             mission_name: "Free The Mind",
-                            agent_id: 1,
+                            agent_id: 101,
                             reference: "Operation started, Morpheus leads",
                         },
                         {
                             mission_name: "Free The Mind",
-                            agent_id: 1,
+                            agent_id: 101,
                             reference: "Strange glitch observed in downtown",
                         },
                         {
                             mission_name: "Defend Zion",
-                            agent_id: 5,
+                            agent_id: 103,
                             reference: "Sentinel swarm approaching main gate",
                         },
                         {
                             mission_name: "Eliminate Virus",
-                            agent_id: 4,
+                            agent_id: 102,
                             reference:
                                 "Agent Smith anomaly flagged for investigation",
                         },
@@ -165,12 +166,12 @@ export const Queries: Record<
                 [
                     {
                         mission_name: "Free The Mind",
-                        agent_id: 1,
+                        agent_id: 101,
                         reference: "Operation started, Morpheus leads",
                     },
                     {
                         mission_name: "Free The Mind",
-                        agent_id: 1,
+                        agent_id: 101,
                         reference: "Strange glitch observed in downtown",
                     },
                 ],
@@ -185,7 +186,8 @@ export const Queries: Record<
                         {
                             mission_id: 1,
                             mission_name: "Free The Mind",
-                            mission_description: "An attempt to awaken humanity.",
+                            mission_description:
+                                "An attempt to awaken humanity.",
                         },
                         {
                             mission_id: 2,
@@ -219,8 +221,7 @@ export const Queries: Record<
                     {
                         mission_id: 1,
                         mission_name: "Free The Mind",
-                        mission_description:
-                            "An attempt to awaken humanity.",
+                        mission_description: "An attempt to awaken humanity.",
                     },
                     {
                         mission_id: 3,
@@ -233,20 +234,149 @@ export const Queries: Record<
         },
         3: {
             concept: AllConcepts[3],
-            input: {
-                residue: [
-                    { name: "Neo", status: "PotentialRebel" },
-                    { name: "Trinity", status: "PotentialRebel" },
-                    { name: "Morpheus", status: "Captain" },
-                    { name: "Jane Doe", status: null },
+            numOptions: 2,
+            input: [
+                {
+                    residue: [
+                        { name: "Neo", status: "PotentialRebel" },
+                        { name: "Trinity", status: "PotentialRebel" },
+                        { name: "Morpheus", status: "Captain" },
+                        { name: "Jane Doe", status: null },
+                        { name: "Smith", status: "EliminationProtocol" },
+                    ],
+                },
+                {
+                    multi_agent_events: [
+                        {
+                            agent_id: 101,
+                            timestamp: "2023-01-01 09:15:00",
+                            location: "Downtown",
+                            agent_replication: false,
+                        },
+                        {
+                            agent_id: 101,
+                            timestamp: "2023-01-01 09:30:00",
+                            location: "Downtown",
+                            agent_replication: false,
+                        },
+                        {
+                            agent_id: 102,
+                            timestamp: "2023-01-01 10:00:00",
+                            location: "Rooftop",
+                            agent_replication: true,
+                        },
+                        {
+                            agent_id: 102,
+                            timestamp: "2023-01-01 10:15:00",
+                            location: "SubwayStation",
+                            agent_replication: true,
+                        },
+                        {
+                            agent_id: 103,
+                            timestamp: "2023-01-01 10:30:00",
+                            location: null,
+                            agent_replication: false,
+                        },
+                    ],
+                },
+            ],
+            expected: [
+                [{ name: "Jane Doe", status: null }],
+                [
+                    {
+                        agent_id: 103,
+                        timestamp: "2023-01-01 10:30:00",
+                        location: null,
+                        agent_replication: false,
+                    },
                 ],
-            },
-            expected: [{ name: "Jane Doe", status: null }],
+            ],
         },
         4: {
             concept: AllConcepts[4],
-            input: {
-                archives: [
+            numOptions: 2,
+            input: [
+                {
+                    archives: [
+                        {
+                            mission_id: 1,
+                            mission_name: "Free The Mind",
+                            mission_description:
+                                "An attempt to awaken humanity.",
+                        },
+                        {
+                            mission_id: 2,
+                            mission_name: "Locate The Key-maker",
+                            mission_description:
+                                "Securing the Keymaker for the Source.",
+                        },
+                        {
+                            mission_id: 3,
+                            mission_name: "Defend Zion",
+                            mission_description:
+                                "Protect the last human city from Sentinels.",
+                        },
+                        {
+                            mission_id: 4,
+                            mission_name: "Rescue Operator",
+                            mission_description:
+                                "An operator has gone missing in the field.",
+                        },
+                        {
+                            mission_id: 5,
+                            mission_name: "Eliminate Virus",
+                            mission_description:
+                                "Suspected virus detected within the Matrix code.",
+                        },
+                    ],
+                    multi_agent_events: [
+                        {
+                            agent_id: 101,
+                            timestamp: "2023-01-01 09:15:00",
+                            location: "Downtown",
+                            agent_replication: false,
+                        },
+                        {
+                            agent_id: 101,
+                            timestamp: "2023-01-01 09:30:00",
+                            location: "Downtown",
+                            agent_replication: false,
+                        },
+                        {
+                            agent_id: 102,
+                            timestamp: "2023-01-01 10:00:00",
+                            location: "Rooftop",
+                            agent_replication: true,
+                        },
+                        {
+                            agent_id: 102,
+                            timestamp: "2023-01-01 10:15:00",
+                            location: "SubwayStation",
+                            agent_replication: true,
+                        },
+                        {
+                            agent_id: 103,
+                            timestamp: "2023-01-01 10:30:00",
+                            location: null,
+                            agent_replication: false,
+                        },
+                    ],
+                },
+            ],
+            expected: [
+                [
+                    {
+                        mission_id: 3,
+                        mission_name: "Defend Zion",
+                        mission_description:
+                            "Protect the last human city from Sentinels.",
+                    },
+                    {
+                        mission_id: 5,
+                        mission_name: "Eliminate Virus",
+                        mission_description:
+                            "Suspected virus detected within the Matrix code.",
+                    },
                     {
                         mission_id: 1,
                         mission_name: "Free The Mind",
@@ -259,81 +389,171 @@ export const Queries: Record<
                             "Securing the Keymaker for the Source.",
                     },
                     {
-                        mission_id: 3,
-                        mission_name: "Defend Zion",
-                        mission_description:
-                            "Protect the last human city from Sentinels.",
-                    },
-                    {
                         mission_id: 4,
                         mission_name: "Rescue Operator",
                         mission_description:
                             "An operator has gone missing in the field.",
                     },
+                ],
+                [
                     {
-                        mission_id: 5,
-                        mission_name: "Eliminate Virus",
-                        mission_description:
-                            "Suspected virus detected within the Matrix code.",
+                        agent_id: 103,
+                        timestamp: "2023-01-01 10:30:00",
+                        location: null,
+                        agent_replication: false,
+                    },
+                    {
+                        agent_id: 102,
+                        timestamp: "2023-01-01 10:15:00",
+                        location: "SubwayStation",
+                        agent_replication: true,
+                    },
+                    {
+                        agent_id: 102,
+                        timestamp: "2023-01-01 10:00:00",
+                        location: "Rooftop",
+                        agent_replication: true,
+                    },
+                    {
+                        agent_id: 101,
+                        timestamp: "2023-01-01 09:30:00",
+                        location: "Downtown",
+                        agent_replication: false,
+                    },
+                    {
+                        agent_id: 101,
+                        timestamp: "2023-01-01 09:15:00",
+                        location: "Downtown",
+                        agent_replication: false,
                     },
                 ],
-            },
-            expected: [
-                { name: "Jane Doe", status: "PotentialRebel" },
-                { name: "Morpheus", status: "Captain" },
-                { name: "Neo", status: "PotentialRebel" },
-                { name: "Trinity", status: "PotentialRebel" },
             ],
         },
         5: {
             concept: AllConcepts[5],
+            numOptions: 4,
             input: [
                 {
-                    name: "residue",
-                    columns: ["name", "status"],
+                    residue: [],
+                    archives: [],
+                    mission_logs: [],
+                    multi_agent_events: [],
                 },
             ],
-            expected: ["INSERT 0 1"],
+            expected: [
+                ["INSERT 0 1"],
+                ["INSERT 0 1"],
+                ["INSERT 0 1"],
+                ["INSERT 0 1"],
+            ],
         },
         6: {
             concept: AllConcepts[6],
+            numOptions: 4,
             input: [
                 {
-                    name: "residue",
-                    columns: ["name", "status"],
+                    residue: [],
+                    archives: [],
+                    mission_logs: [],
+                    multi_agent_events: [],
                 },
             ],
-            expected: ["UPDATE 1"],
+            expected: [
+                ["UPDATE 1"],
+                ["UPDATE 1"],
+                ["UPDATE 1"],
+                ["UPDATE 1"],
+            ],
         },
         7: {
             concept: AllConcepts[7],
+            numOptions: 4,
             input: [
                 {
-                    name: "residue",
-                    columns: ["name", "status"],
+                    residue: [],
+                    archives: [],
+                    mission_logs: [],
+                    multi_agent_events: [],
                 },
             ],
-            expected: ["DELETE 1"],
+            expected: [
+                ["DELETE 1"],
+                ["DELETE 1"],
+                ["DELETE 1"],
+                ["DELETE 1"],
+            ],
         },
         8: {
             concept: AllConcepts[8],
-            input: [
-                {
-                    name: "residue",
-                    columns: ["name", "status"],
-                },
-            ],
-            expected: ["START TRANSACTION", "ROLLBACK"],
+            numOptions: 1,
+            input: [],
+            expected: [],
         },
         9: {
             concept: AllConcepts[9],
+            numOptions: 1,
             input: [
                 {
-                    name: "residue",
-                    columns: ["name", "status"],
+                    multi_agent_events: [
+                        {
+                            agent_id: 101,
+                            timestamp: "2023-01-01 09:15:00",
+                            location: "Downtown",
+                            agent_replication: false,
+                        },
+                        {
+                            agent_id: 101,
+                            timestamp: "2023-01-01 09:30:00",
+                            location: "Downtown",
+                            agent_replication: false,
+                        },
+                        {
+                            agent_id: 102,
+                            timestamp: "2023-01-01 10:00:00",
+                            location: "Rooftop",
+                            agent_replication: true,
+                        },
+                        {
+                            agent_id: 102,
+                            timestamp: "2023-01-01 10:15:00",
+                            location: "SubwayStation",
+                            agent_replication: true,
+                        },
+                        {
+                            agent_id: 103,
+                            timestamp: "2023-01-01 10:30:00",
+                            location: null,
+                            agent_replication: false,
+                        },
+                    ],
+                    mission_logs: [
+                        {
+                            mission_name: "Free The Mind",
+                            agent_id: 101,
+                            reference: "Operation started, Morpheus leads",
+                        },
+                        {
+                            mission_name: "Free The Mind",
+                            agent_id: 101,
+                            reference: "Strange glitch observed in downtown",
+                        },
+                        {
+                            mission_name: "Defend Zion",
+                            agent_id: 103,
+                            reference: "Sentinel swarm approaching main gate",
+                        },
+                        {
+                            mission_name: "Eliminate Virus",
+                            agent_id: 102,
+                            reference:
+                                "Agent Smith anomaly flagged for investigation",
+                        },
+                    ],
                 },
             ],
-            expected: ["START TRANSACTION", "COMMIT"],
+            expected: [
+                [],
+            ],
         },
     },
 

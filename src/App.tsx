@@ -3,7 +3,7 @@ import { WelcomeScreen } from './components/WelcomeScreen';
 import { LoadingScreen } from './components/LoadingScreen';
 import { MainUI } from './components/MainUI';
 import { SetupModal } from './components/SetupModal';
-import { Queries } from './utils/constants';
+import { Queries, ThemeTables, ThemeType } from './utils/constants';
 import { getGeneratedQuery } from './utils/llmService';
 
 type GameState = 'loading' | 'welcome' | 'main';
@@ -12,9 +12,10 @@ function App() {
   const [gameState, setGameState] = useState<GameState>('loading');
   const [isSetupModalOpen, setIsSetupModalOpen] = useState(false);
   const [systemOutput, setSystemOutput] = useState('');
-  const [theme, setTheme] = useState('cyberpunk' as 'cyberpunk' | 'fantasy' | 'real-world');
+  const [theme, setTheme] = useState('cyberpunk' as ThemeType);
   const [concepts, setConcepts] = useState<string[]>([]);
   const [actionNumber, setActionNumber] = useState(0);
+  const [schema, setSchema] = useState(ThemeTables[theme]);
 
   useEffect(() => {
     // Simulate initial loading
@@ -32,17 +33,22 @@ function App() {
   const handleSetupComplete = async ({ theme: chosenTheme, concepts, action }: { theme: 'cyberpunk' | 'fantasy' | 'real-world'; concepts: string[]; action: string }) => {
     setTheme(chosenTheme);
     setConcepts(concepts);
+    setSchema(ThemeTables[chosenTheme]);
 
     const actionNumber = parseInt(action, 10);
     setActionNumber(actionNumber);
 
+    const randomChoice = Math.floor(Math.random() * Queries[chosenTheme][actionNumber].numOptions);
+    const chosenConcept = Queries[chosenTheme][actionNumber].concept;
+    const chosenInput = Queries[chosenTheme][actionNumber].input[randomChoice];
+    const chosenExpected = Queries[chosenTheme][actionNumber].expected[randomChoice];
     const narrative = await getGeneratedQuery(
       chosenTheme,
-      (Queries[chosenTheme] as Record<number, typeof Queries[keyof typeof Queries][number]>)[actionNumber].concept,
-      (Queries[chosenTheme] as Record<number, typeof Queries[keyof typeof Queries][number]>)[actionNumber].input,
-      (Queries[chosenTheme] as Record<number, typeof Queries[keyof typeof Queries][number]>)[actionNumber].expected
+      chosenConcept,
+      chosenInput,
+      chosenExpected
     );
-    setSystemOutput(`Task ${actionNumber+1}: ${narrative}`);
+    setSystemOutput(`${narrative}`);
     setIsSetupModalOpen(false);
     setGameState('main');
   };
@@ -60,7 +66,7 @@ function App() {
       {gameState === 'main' && theme && (
         <MainUI
           initialOutput={systemOutput}
-          initialSchemas={Queries[theme][actionNumber].input}
+          initialSchemas={schema}
           theme={theme}
           concepts={concepts}
           actionNumber={actionNumber}
