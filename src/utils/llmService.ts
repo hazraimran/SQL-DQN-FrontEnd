@@ -1,3 +1,32 @@
+// Add this interface to describe the query history item
+interface QueryHistoryItem {
+  theme: string;
+  concept: string;
+  narrative: string;
+  timestamp: number;
+}
+
+// Create a function to manage the query history
+function getQueryHistory(): QueryHistoryItem[] {
+  try {
+    const saved = localStorage.getItem('query_history');
+    return saved ? JSON.parse(saved) : [];
+  } catch (error) {
+    console.error('Failed to load query history:', error);
+    return [];
+  }
+}
+
+function saveQueryHistory(history: QueryHistoryItem[]): void {
+  try {
+    // Keep only the most recent 5 items to avoid large prompts
+    const trimmedHistory = history.slice(-5);
+    localStorage.setItem('query_history', JSON.stringify(trimmedHistory));
+  } catch (error) {
+    console.error('Failed to save query history:', error);
+  }
+}
+
 export async function getGeneratedQuery(
   theme: string,
   concept: string,
@@ -7,6 +36,17 @@ export async function getGeneratedQuery(
   // Quick fix to avoid null or undefined input causing TypeError
   const safeInput = input || {};
 
+  // Get query history
+  const queryHistory = getQueryHistory();
+  
+  // Create history context string if we have previous queries - only using narratives
+  const historyContext = queryHistory.length > 0 
+    ? queryHistory.map((item, index) => 
+        `[${index + 1}] ${item.narrative}`
+      ).join('\n\n')
+    : "No previous queries found. Ignore this line.";
+
+  console.log('History Context:', historyContext);
   // Create a list of tables with columns in a friendly format
   const tableContents = Object.entries(safeInput)
     .map(([tableName, tableRows]) => {
@@ -38,19 +78,19 @@ export async function getGeneratedQuery(
   // Build the LLM prompt content
   const content =
     'You are a creative storyteller with knowledge of SQL database queries. ' +
-    'Generate a **engaging narrative within 100 words** based on a given theme. ' +
+    'Generate an **engaging narrative within 50 words** based on a given theme that continues the ongoing storyline. ' +
     'Your story must include:\n\n' +
-    '1. An introduction to the setting or characters tied to the theme.\n' +
+    `1. A continuation of the previous narrative: ${historyContext}\n` +
     `2. A challenge or mission that can only be solved by running a ${concept} SQL query ` +
-    'against the following table(s) and contents:\n' +
+    'against the following contents:\n' +
     `${tableContents}\n\n` +
-    "3. A direct prompt asking the user (the 'player') to provide the SQL query " +
-    'that returns the specified expected result.\n\n' +
+    "3. A direct prompt asking the user (the 'player') to provide the SQL query that " +
+    'returns the specified expected result.\n\n' +
     '[Details to incorporate into the story]\n' +
     `- Theme: ${theme}\n` +
     `- Expected Result:\n[${expectedResult}]\n\n` +
     '[Format of your response]\n' +
-    "1. Provide a short narrative or storyline set in the specified theme.\n" +
+    "1. Provide a narrative or storyline set within 50 words in bullets in the specified theme that continues from the previous storyline.\n" +
     "2. Do NOT provide the SQL query yourself; only ask the player to supply it.\n\n" +
     '[Example Guidance]\n' +
     "- If the theme is 'Cyberpunk,' your story might refer to futuristic cities, neon lights, or secret hacking missions.\n" +
@@ -73,7 +113,16 @@ export async function getGeneratedQuery(
 
   const data = await response.json();
   const generatedQuery = data.choices[0].message.content;
-  // console.log('Generated query:', generatedQuery);
+  
+  console.log('Generated query:', generatedQuery);
+  // Store this query in history
+  queryHistory.push({
+    theme,
+    concept,
+    narrative: generatedQuery,
+    timestamp: Date.now()
+  });
+  saveQueryHistory(queryHistory);
 
   return generatedQuery;
 }

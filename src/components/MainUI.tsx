@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
-import { Send, Database, Wand, ClipboardList, ListChecks, CheckCircle, XCircle } from 'lucide-react';
+import { Send, Database, Wand, ClipboardList, ListChecks, CheckCircle, XCircle, History } from 'lucide-react';
 import { MasteryProgress } from './MasteryProgress';
 import { Queries } from '../utils/constants';
 import { getGeneratedQuery } from '../utils/llmService';
@@ -70,10 +70,12 @@ const animations = {
     [data-tooltip] {
       position: relative;
     }
-    [data-tooltip]:hover:after {
+    [data-tooltip]:after {
+      opacity: 0;
+      visibility: hidden;
       content: attr(data-tooltip);
       position: absolute;
-      bottom: 100%;
+      bottom: calc(100% + 10px);
       left: 0;
       background: #1f2937;
       padding: 8px 12px;
@@ -85,12 +87,47 @@ const animations = {
       z-index: 10;
       font-size: 13px;
       line-height: 1.4;
-      display: block;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
       overflow-y: auto;
       max-height: 300px;
+      transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out, transform 0.2s ease-in-out;
+      transform: translateY(10px);
+      pointer-events: none;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    [data-tooltip]:before {
+      opacity: 0;
+      visibility: hidden;
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 20px;
+      border: 8px solid transparent;
+      border-top-color: #1f2937;
+      transform: translateY(3px);
+      transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out, transform 0.2s ease-in-out;
+      pointer-events: none;
+    }
+    [data-tooltip]:hover:after,
+    [data-tooltip]:hover:before {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
     }
   `
+};
+
+// Helper function to extract just the question from the narrative
+const extractQuestion = (narrative: string): string => {
+  // Look for the last sentence with a question mark (likely the SQL question)
+  const questionMatch = narrative.match(/[^.!?]+\?/g);
+  if (questionMatch && questionMatch.length > 0) {
+    return questionMatch[questionMatch.length - 1].trim();
+  }
+  
+  // Fallback: return last sentence or a shortened version
+  const sentences = narrative.split(/[.!?]+/).filter(s => s.trim().length > 0);
+  return sentences.length ? sentences[sentences.length - 1].trim() : narrative.substring(0, 100);
 };
 
 export function MainUI({
@@ -117,6 +154,9 @@ export function MainUI({
   const [displayText, setDisplayText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const typewriterRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Add this state to control the history popup
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   // Refs for scrolling
   const historyContainerRef = useRef<HTMLDivElement>(null);
@@ -346,64 +386,42 @@ export function MainUI({
       )}
       
       <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
-        {/* Left panel */}
-        <div className="space-y-4">
-          {/* Box for query history */}
-          <div ref={historyContainerRef} className="h-[40vh] p-4 overflow-auto bg-gray-800 rounded-xl">
-            <h3 className="text-lg font-semibold mb-2 flex items-center">
-              <ClipboardList className="w-5 h-5 mr-2" />
-              Query History
-            </h3>
-            {history.length === 0 ? (
-              <p>No previous queries.</p>
-            ) : (
-              history.map((item, idx) => (
-                <div key={idx} className="mb-3">
-                  <p className="text-sm text-blue-400">Query {idx + 1}:</p>
-                  <pre className="bg-gray-700 p-2 whitespace-pre-wrap break-words">
-                    {item.userQuery}
-                  </pre>
-                  <div className="bg-gray-700 p-2 whitespace-pre-wrap break-words mt-1 markdown-table">
-                    <ReactMarkdown 
-                      remarkPlugins={[remarkGfm]}
-                      components={{
-                        table: ({node, ...props}) => (
-                          <table className="border-collapse border border-gray-600 w-full" {...props} />
-                        ),
-                        th: ({node, ...props}) => (
-                          <th className="border border-gray-600 px-2 py-1 bg-gray-800" {...props} />
-                        ),
-                        td: ({node, ...props}) => (
-                          <td className="border border-gray-600 px-2 py-1" {...props} />
-                        )
-                      }}
-                    >
-                      {item.dbResultString}
-                    </ReactMarkdown>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* System Output as plain text (no Markdown) */}
-          <div ref={outputContainerRef} className="h-[60vh] rounded-xl p-4 overflow-auto bg-gray-800">
+        {/* Left panel - changed from space-y-4 to flex with column direction */}
+        <div className="flex flex-col h-full">
+          {/* System Output - set to flex-grow-1 to take available space */}
+          <div ref={outputContainerRef} className="flex-grow mb-4 rounded-xl p-4 overflow-auto bg-gray-800">
             <h3 className="text-xl font-semibold mb-4 flex items-center">
               <ListChecks className="w-5 h-5 mr-2" />
               Task Board
             </h3>
             
-            {/* Separate task list with proper styling and instant tooltips */}
+            {/* Task list */}
             <div className="mb-4">
               <h4 className="text-lg">Previous Tasks</h4>
               <div className="space-y-1">
                 {tasks.map((task, idx) => (
                   <div 
                     key={idx}
-                    className={`${task.correct ? 'text-green-400' : 'text-red-400'} cursor-help mb-1 p-1 hover:bg-gray-700 rounded`}
-                    data-tooltip={`Task ${idx + 1}: ${task.concept}\n\n${task.narrative}`}
+                    className={`
+                      ${task.correct ? 'bg-green-900/20 border-l-4 border-green-500' : 'bg-red-900/20 border-l-4 border-red-500'} 
+                      cursor-help mb-2 p-2 rounded flex items-center justify-between
+                      hover:bg-gray-700 transition-colors duration-150 shadow-sm
+                      relative group
+                    `}
+                    data-tooltip={`Task ${idx + 1}: ${task.concept}\n${extractQuestion(task.narrative)}`}
                   >
-                    {task.taskName} {task.correct ? '✓' : '✗'}
+                    <div className="flex items-center">
+                      <span className="font-medium">{task.taskName}</span>
+                      <span className="ml-2 text-xs opacity-80"></span>
+                    </div>
+                    <div>
+                      {task.correct ? 
+                        <CheckCircle className="w-5 h-5 text-green-400" /> : 
+                        <XCircle className="w-5 h-5 text-red-400" />
+                      }
+                    </div>
+                    {/* Hover state indicator */}
+                    <div className="absolute inset-0 border-2 border-blue-500/0 rounded transition-all duration-200 group-hover:border-blue-500/50"></div>
                   </div>
                 ))}
               </div>
@@ -412,7 +430,7 @@ export function MainUI({
             <div className="prose prose-invert">
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
-                rehypePlugins={[rehypeRaw]} // This enables HTML in markdown
+                rehypePlugins={[rehypeRaw]}
               >
                 {displayText || 'No output yet...'}
               </ReactMarkdown>
@@ -420,29 +438,96 @@ export function MainUI({
             </div>
           </div>
 
-          {/* Query Input */}
-          <form onSubmit={handleSubmit} className="flex gap-2 items-center">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Enter your SQL query..."
-              className="flex-1 px-4 py-2 bg-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="px-4 py-2 bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
-            >
-              <Send className="w-5 h-5" />
-            </button>
-            {isLoading && (
-              <div
-                className="w-4 h-4 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"
-                title="Generating next query..."
+          {/* Query Input - fixed height */}
+          <div className="relative h-12 mb-4">
+            <form onSubmit={handleSubmit} className="flex gap-2 items-center h-full">
+              <button
+                type="button"
+                onClick={() => setIsHistoryOpen(!isHistoryOpen)}
+                className="px-3 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors"
+                title="View query history"
+              >
+                <History className="w-5 h-5" />
+              </button>
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Enter your SQL query..."
+                className="flex-1 px-4 py-2 bg-gray-800 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="px-4 py-2 bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
+              >
+                <Send className="w-5 h-5" />
+              </button>
+              {isLoading && (
+                <div
+                  className="w-4 h-4 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"
+                  title="Generating next query..."
+                />
+              )}
+            </form>
+            
+            {/* History popup (unchanged) */}
+            {isHistoryOpen && (
+              <div className="absolute z-50 bottom-full left-0 w-full mb-2 max-h-[60vh] overflow-auto bg-gray-800 rounded-xl shadow-lg border border-gray-700 p-4">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-lg font-semibold flex items-center">
+                    <ClipboardList className="w-5 h-5 mr-2" />
+                    Query History
+                  </h3>
+                  <button onClick={() => setIsHistoryOpen(false)} className="text-gray-400 hover:text-white">
+                    &times;
+                  </button>
+                </div>
+                
+                {history.length === 0 ? (
+                  <p>No previous queries.</p>
+                ) : (
+                  history.map((item, idx) => (
+                    <div key={idx} className="mb-4 border-b border-gray-700 pb-4">
+                      <div className="flex justify-between items-center mb-1">
+                        <p className="text-sm text-blue-400">Query {idx + 1}:</p>
+                        <button 
+                          className="text-xs bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded transition-colors"
+                          onClick={() => {
+                            setInput(item.userQuery);
+                            setIsHistoryOpen(false);
+                          }}
+                        >
+                          Use this query
+                        </button>
+                      </div>
+                      <pre className="bg-gray-700 p-2 whitespace-pre-wrap break-words rounded">
+                        {item.userQuery}
+                      </pre>
+                      <div className="bg-gray-700 p-2 whitespace-pre-wrap break-words mt-1 markdown-table rounded">
+                        <ReactMarkdown 
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            table: ({node, ...props}) => (
+                              <table className="border-collapse border border-gray-600 w-full" {...props} />
+                            ),
+                            th: ({node, ...props}) => (
+                              <th className="border border-gray-600 px-2 py-1 bg-gray-800" {...props} />
+                            ),
+                            td: ({node, ...props}) => (
+                              <td className="border border-gray-600 px-2 py-1" {...props} />
+                            )
+                          }}
+                        >
+                          {item.dbResultString}
+                        </ReactMarkdown>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             )}
-          </form>
+          </div>
         </div>
 
         {/* Right panel - unchanged */}
@@ -450,33 +535,33 @@ export function MainUI({
           {/* Mastery Progress */}
           <MasteryProgress concepts={concepts} masteryLevels={masteryLevels} />
 
-          {/* Schema from queries[theme][action].tables */}
+          {/* Schema from queries[theme][action].tables - condensed 2x2 grid */}
           <div className="bg-gray-800 rounded-xl p-4">
             <h3 className="text-xl font-semibold mb-4 flex items-center">
               <IconToUse className="w-5 h-5 mr-2" />
               SQL Schemas
             </h3>
-            <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
               {initialSchemas.map((table) => (
-                <div key={table.name} className="border border-gray-700 rounded-lg p-3">
-                  <h4 className="font-medium text-blue-400 mb-2">{table.name}</h4>
-                  <div className="font-mono text-sm text-gray-400">
+                <div key={table.name} className="border border-gray-700 rounded-lg p-2">
+                  <h4 className="font-medium text-blue-400 mb-1 text-sm">{table.name}</h4>
+                  <div className="font-mono text-xs text-gray-400">
                     <table className="w-full border-collapse">
                       <thead>
                         <tr>
-                          <th className="border-b border-gray-600 text-left px-2 py-1">
-                            Column Name
+                          <th className="border-b border-gray-600 text-left px-1 py-1">
+                            Column
                           </th>
-                          <th className="border-b border-gray-600 text-left px-2 py-1">
-                            Data Type
+                          <th className="border-b border-gray-600 text-left px-1 py-1">
+                            Type
                           </th>
                         </tr>
                       </thead>
                       <tbody>
                         {table.columns.map((col, idx) => (
                           <tr key={col}>
-                            <td className="border-b border-gray-700 px-2 py-1">{col}</td>
-                            <td className="border-b border-gray-700 px-2 py-1">
+                            <td className="border-b border-gray-700 px-1 py-0.5">{col}</td>
+                            <td className="border-b border-gray-700 px-1 py-0.5">
                               {table.types[idx].toUpperCase()}
                             </td>
                           </tr>
