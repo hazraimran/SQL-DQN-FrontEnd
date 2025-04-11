@@ -46,7 +46,7 @@ export async function getGeneratedQuery(
       ).join('\n\n')
     : "No previous queries found. Ignore this line.";
 
-  console.log('History Context:', historyContext);
+  // console.log('History Context:', historyContext);
   // Create a list of tables with columns in a friendly format
   const tableContents = Object.entries(safeInput)
     .map(([tableName, tableRows]) => {
@@ -114,7 +114,7 @@ export async function getGeneratedQuery(
   const data = await response.json();
   const generatedQuery = data.choices[0].message.content;
   
-  console.log('Generated query:', generatedQuery);
+  // console.log('Generated query:', generatedQuery);
   // Store this query in history
   queryHistory.push({
     theme,

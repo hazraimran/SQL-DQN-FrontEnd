@@ -18,7 +18,8 @@ interface MainUIProps {
   initialSchemas: Schema[];
   theme: string;
   concepts: string[];
-  actionNumber: number;
+  concept: string;
+  randomChoice: number;
 }
 
 type HistoryEntry = {
@@ -135,8 +136,12 @@ export function MainUI({
   initialSchemas,
   theme,
   concepts,
-  actionNumber: initialActionNumber,
+  concept: initialConcept,
+  randomChoice: initialRandomChoice, // Rename to clarify it's initial
 }: MainUIProps) {
+  // Add randomChoice to state variables
+  const [randomChoice, setRandomChoice] = useState(initialRandomChoice);
+  
   // Existing state
   const [output, setOutput] = useState(initialOutput);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -144,7 +149,7 @@ export function MainUI({
   const [input, setInput] = useState('');
   const [masteryLevels, setMasteryLevels] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [actionNumber, setActionNumber] = useState(initialActionNumber);
+  const [concept, setConcept] = useState(initialConcept);
   
   // New states for animations
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
@@ -256,9 +261,16 @@ export function MainUI({
 
     try {
       setIsLoading(true);
-      const expected =
-        (Queries[theme] as Record<number, typeof Queries[keyof typeof Queries][number]>)[actionNumber]
-          .expected;
+      const themeQueries = Queries[theme as keyof typeof Queries];
+      const conceptQueries = themeQueries[concept as keyof typeof themeQueries];
+      
+      // Make sure we have valid expected data to send
+      if (!conceptQueries?.expected || randomChoice >= conceptQueries.expected.length) {
+        throw new Error("Invalid query configuration");
+      }
+      
+      const expected = conceptQueries.expected[randomChoice];
+      
       const response = await fetch('http://localhost:3000/submit-query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -267,98 +279,84 @@ export function MainUI({
 
       if (!response.ok) {
         console.log('Error response:', response);
-        // Try to parse the response to get the detailed error message
-        // try {
-          const errorData = await response.json();
-          console.log('Error data:', errorData);
-          // Extract error message from the backend format
-          const errorMessage = `${errorData.error || 'An unknown error occurred'}` +
-            `- ${errorData.details || 'No additional information available.'}`;
-          throw new Error(errorMessage);
-        // } catch (jsonError) {
-        //   // If we can't parse the JSON, fall back to the original error
-        //   throw new Error(`Failed to execute query - ${response.statusText}`);
-        // }
+        const errorData = await response.json();
+        console.log('Error data:', errorData);
+        const errorMessage = `${errorData.error || 'An unknown error occurred'}` +
+          `- ${errorData.details || 'No additional information available.'}`;
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
       const newActionNumber = parseInt(data.action, 10);
-      setActionNumber(newActionNumber);
+      const newConcept = concepts[newActionNumber];
+      setConcept(newConcept);
 
-      const randomChoice = Math.floor(
-        Math.random() * Queries[theme][newActionNumber].numOptions
+      // Generate new random choice and UPDATE STATE properly
+      const newRandomChoice = Math.floor(
+        Math.random() * Queries[theme as keyof typeof Queries][newConcept]?.numOptions || 1
       );
-      const chosenConcept = Queries[theme][newActionNumber].concept;
-      const chosenInput = Queries[theme][newActionNumber].input[randomChoice];
-      const chosenExpected = Queries[theme][newActionNumber].expected[randomChoice];
+      setRandomChoice(newRandomChoice); // Use state setter
+      
+      const chosenInput = Queries[theme as keyof typeof Queries][newConcept]?.input?.[newRandomChoice];
+      const chosenExpected = Queries[theme as keyof typeof Queries][newConcept]?.expected?.[newRandomChoice];
+      
+      // Use the new values
       const narrative = await getGeneratedQuery(
         theme,
-        chosenConcept,
+        newConcept,
         chosenInput,
         chosenExpected
       );
 
       console.log(JSON.stringify(data, null, 2));
-      // Improve the correctness check with better type handling
       const isCorrect = data.correct;
 
-      // Log the correctness value to debug
       console.log('Correctness data:', data.correct, 'Interpreted as:', isCorrect);
 
-      // Show animation based on correctness - ensure only one animation shows
       if (isCorrect) {
         setShowSuccessAnimation(true);
-        setShowErrorAnimation(false); // Explicitly turn off error animation
+        setShowErrorAnimation(false);
         setTimeout(() => setShowSuccessAnimation(false), 1500);
       } else {
         setShowErrorAnimation(true);
-        setShowSuccessAnimation(false); // Explicitly turn off success animation
+        setShowSuccessAnimation(false);
         setTimeout(() => setShowErrorAnimation(false), 1500);
       }
 
       const previousResultFromDB = data.resultFromDB;
       const dbResultString = formatDBResult(previousResultFromDB);
 
-      // 1) Keep a history of all userQueries & DB results
       setHistory((prev) => [...prev, { 
         userQuery: input, 
         dbResultString 
       }]);
 
-      // 2) Integrate new task record with sequential numbering
       setTasks((currentTasks) => [
         ...currentTasks,
         {
           taskName: `Task ${currentTasks.length + 1}`,
-          correct: isCorrect, // Using our improved check
-          concept: chosenConcept,
+          correct: isCorrect,
+          concept: newConcept,
           narrative: narrative
         },
       ]);
 
-      // 3) Update output without DB result - only narrative
       setOutput(`${narrative}`);
       setMasteryLevels(data.newMastery);
 
       setInput('');
     } catch (error) {
-      // console.error('Error:', error);
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
       
-      // Display error in red and replace previous error message if it exists
       setOutput(prevOutput => {
-        // Check if there's already an error message
         const hasExistingError = prevOutput.includes("Error:");
         if (hasExistingError) {
-          // Replace the existing error message
           return prevOutput.split("Error:")[0] + `<span class="text-red-500">Error: ${errorMessage}</span>`;
         } else {
-          // Add new error message
           return prevOutput + `\n\n<span class="text-red-500">Error: ${errorMessage}</span>`;
         }
       });
       
-      // Also show the error animation
       setShowErrorAnimation(true);
       setTimeout(() => setShowErrorAnimation(false), 1500);
     } finally {
@@ -368,17 +366,14 @@ export function MainUI({
 
   return (
     <>
-      {/* Add CSS for animations */}
       <style>{animations.success + animations.error + animations.tooltip}</style>
       
-      {/* Success animation */}
       {showSuccessAnimation && (
         <div className="success-animation">
           <CheckCircle size={80} color="#10b981" />
         </div>
       )}
       
-      {/* Error animation */}
       {showErrorAnimation && (
         <div className="error-animation">
           <XCircle size={80} color="#ef4444" />
@@ -386,16 +381,13 @@ export function MainUI({
       )}
       
       <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
-        {/* Left panel - changed from space-y-4 to flex with column direction */}
         <div className="flex flex-col h-full">
-          {/* System Output - set to flex-grow-1 to take available space */}
           <div ref={outputContainerRef} className="flex-grow mb-4 rounded-xl p-4 overflow-auto bg-gray-800">
             <h3 className="text-xl font-semibold mb-4 flex items-center">
               <ListChecks className="w-5 h-5 mr-2" />
               Task Board
             </h3>
             
-            {/* Task list */}
             <div className="mb-4">
               <h4 className="text-lg">Previous Tasks</h4>
               <div className="space-y-1">
@@ -420,7 +412,6 @@ export function MainUI({
                         <XCircle className="w-5 h-5 text-red-400" />
                       }
                     </div>
-                    {/* Hover state indicator */}
                     <div className="absolute inset-0 border-2 border-blue-500/0 rounded transition-all duration-200 group-hover:border-blue-500/50"></div>
                   </div>
                 ))}
@@ -438,7 +429,6 @@ export function MainUI({
             </div>
           </div>
 
-          {/* Query Input - fixed height */}
           <div className="relative h-12 mb-4">
             <form onSubmit={handleSubmit} className="flex gap-2 items-center h-full">
               <button
@@ -471,7 +461,6 @@ export function MainUI({
               )}
             </form>
             
-            {/* History popup (unchanged) */}
             {isHistoryOpen && (
               <div className="absolute z-50 bottom-full left-0 w-full mb-2 max-h-[60vh] overflow-auto bg-gray-800 rounded-xl shadow-lg border border-gray-700 p-4">
                 <div className="flex justify-between items-center mb-3">
@@ -530,12 +519,9 @@ export function MainUI({
           </div>
         </div>
 
-        {/* Right panel - unchanged */}
         <div className="space-y-4">
-          {/* Mastery Progress */}
           <MasteryProgress concepts={concepts} masteryLevels={masteryLevels} />
 
-          {/* Schema from queries[theme][action].tables - condensed 2x2 grid */}
           <div className="bg-gray-800 rounded-xl p-4">
             <h3 className="text-xl font-semibold mb-4 flex items-center">
               <IconToUse className="w-5 h-5 mr-2" />

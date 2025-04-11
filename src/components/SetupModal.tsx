@@ -46,11 +46,9 @@ export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
       }
 
       const data = await response.json();
-      // sort concepts based on the order of the allConcepts array
-      const sortedConcepts = AllConcepts.filter((concept) => concepts.includes(concept));
 
       // Pass theme, concepts and action to the parent
-      onComplete({ theme, concepts: sortedConcepts, action: data.action });
+      onComplete({ theme, concepts, action: data.action });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
       // Reset loading only on error

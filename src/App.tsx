@@ -14,8 +14,9 @@ function App() {
   const [systemOutput, setSystemOutput] = useState('');
   const [theme, setTheme] = useState('cyberpunk' as ThemeType);
   const [concepts, setConcepts] = useState<string[]>([]);
-  const [actionNumber, setActionNumber] = useState(0);
+  const [concept, setConcept] = useState('');
   const [schema, setSchema] = useState(ThemeTables[theme]);
+  const [randomChoice, setRandomChoice] = useState(0);
 
   useEffect(() => {
     // Simulate initial loading
@@ -36,18 +37,23 @@ function App() {
     setSchema(ThemeTables[chosenTheme]);
 
     const actionNumber = parseInt(action, 10);
-    setActionNumber(actionNumber);
+    const chosenConcept = concepts[actionNumber]; // Store in local variable
+    setConcept(chosenConcept);
 
-    const randomChoice = Math.floor(Math.random() * Queries[chosenTheme][actionNumber].numOptions);
-    const chosenConcept = Queries[chosenTheme][actionNumber].concept;
-    const chosenInput = Queries[chosenTheme][actionNumber].input[randomChoice];
-    const chosenExpected = Queries[chosenTheme][actionNumber].expected[randomChoice];
+    const randomChoice = Math.floor(Math.random() * Queries[chosenTheme][chosenConcept].numOptions);
+    setRandomChoice(randomChoice);
+    
+    // Use chosenConcept as the key (not actionNumber)
+    const chosenInput = Queries[chosenTheme][chosenConcept].input[randomChoice];
+    const chosenExpected = Queries[chosenTheme][chosenConcept].expected[randomChoice];
+    
     const narrative = await getGeneratedQuery(
       chosenTheme,
       chosenConcept,
       chosenInput,
       chosenExpected
     );
+    
     setSystemOutput(`${narrative}`);
     setIsSetupModalOpen(false);
     setGameState('main');
@@ -69,7 +75,8 @@ function App() {
           initialSchemas={schema}
           theme={theme}
           concepts={concepts}
-          actionNumber={actionNumber}
+          concept={concept}
+          randomChoice={randomChoice}
         />
       )}
 

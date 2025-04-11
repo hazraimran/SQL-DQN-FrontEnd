@@ -237,31 +237,31 @@ export const Queries: Record<
                     multi_agent_events: [
                         {
                             agent_id: 101,
-                            timestamp: "2023-01-01 09:15:00",
+                            timestamp: "2023-01-01T09:15:00.000Z",
                             location: "Downtown",
                             agent_replication: false,
                         },
                         {
                             agent_id: 101,
-                            timestamp: "2023-01-01 09:30:00",
+                            timestamp: "2023-01-01T09:30:00.000Z",
                             location: "Downtown",
                             agent_replication: false,
                         },
                         {
                             agent_id: 102,
-                            timestamp: "2023-01-01 10:00:00",
+                            timestamp: "2023-01-01T10:00:00.000Z",
                             location: "Rooftop",
                             agent_replication: true,
                         },
                         {
                             agent_id: 102,
-                            timestamp: "2023-01-01 10:15:00",
+                            timestamp: "2023-01-01T10:15:00.000Z",
                             location: "SubwayStation",
                             agent_replication: true,
                         },
                         {
                             agent_id: 103,
-                            timestamp: "2023-01-01 10:30:00",
+                            timestamp: "2023-01-01T18:30:00.000Z",
                             location: null,
                             agent_replication: false,
                         },
@@ -273,7 +273,7 @@ export const Queries: Record<
                 [
                     {
                         agent_id: 103,
-                        timestamp: "2023-01-01 10:30:00",
+                        timestamp: "2023-01-01T10:30:00.000Z",
                         location: null,
                         agent_replication: false,
                     },
@@ -319,31 +319,31 @@ export const Queries: Record<
                     multi_agent_events: [
                         {
                             agent_id: 101,
-                            timestamp: "2023-01-01 09:15:00",
+                            timestamp: "2023-01-01T09:15:00.000Z",
                             location: "Downtown",
                             agent_replication: false,
                         },
                         {
                             agent_id: 101,
-                            timestamp: "2023-01-01 09:30:00",
+                            timestamp: "2023-01-01T09:30:00.000Z",
                             location: "Downtown",
                             agent_replication: false,
                         },
                         {
                             agent_id: 102,
-                            timestamp: "2023-01-01 10:00:00",
+                            timestamp: "2023-01-01T10:00:00.000Z",
                             location: "Rooftop",
                             agent_replication: true,
                         },
                         {
                             agent_id: 102,
-                            timestamp: "2023-01-01 10:15:00",
+                            timestamp: "2023-01-01T10:15:00.000Z",
                             location: "SubwayStation",
                             agent_replication: true,
                         },
                         {
                             agent_id: 103,
-                            timestamp: "2023-01-01 10:30:00",
+                            timestamp: "2023-01-01T10:30:00.000Z",
                             location: null,
                             agent_replication: false,
                         },
@@ -385,31 +385,31 @@ export const Queries: Record<
                 [
                     {
                         agent_id: 103,
-                        timestamp: "2023-01-01 10:30:00",
+                        timestamp: "2023-01-01T10:30:00.000Z",
                         location: null,
                         agent_replication: false,
                     },
                     {
                         agent_id: 102,
-                        timestamp: "2023-01-01 10:15:00",
+                        timestamp: "2023-01-01T10:15:00.000Z",
                         location: "SubwayStation",
                         agent_replication: true,
                     },
                     {
                         agent_id: 102,
-                        timestamp: "2023-01-01 10:00:00",
+                        timestamp: "2023-01-01T10:00:00.000Z",
                         location: "Rooftop",
                         agent_replication: true,
                     },
                     {
                         agent_id: 101,
-                        timestamp: "2023-01-01 09:30:00",
+                        timestamp: "2023-01-01T09:30:00.000Z",
                         location: "Downtown",
                         agent_replication: false,
                     },
                     {
                         agent_id: 101,
-                        timestamp: "2023-01-01 09:15:00",
+                        timestamp: "2023-01-01T09:15:00.000Z",
                         location: "Downtown",
                         agent_replication: false,
                     },
@@ -479,31 +479,31 @@ export const Queries: Record<
                     multi_agent_events: [
                         {
                             agent_id: 101,
-                            timestamp: "2023-01-01 09:15:00",
+                            timestamp: "2023-01-01T09:15:00.000Z",
                             location: "Downtown",
                             agent_replication: false,
                         },
                         {
                             agent_id: 101,
-                            timestamp: "2023-01-01 09:30:00",
+                            timestamp: "2023-01-01T09:30:00.000Z",
                             location: "Downtown",
                             agent_replication: false,
                         },
                         {
                             agent_id: 102,
-                            timestamp: "2023-01-01 10:00:00",
+                            timestamp: "2023-01-01T10:00:00.000Z",
                             location: "Rooftop",
                             agent_replication: true,
                         },
                         {
                             agent_id: 102,
-                            timestamp: "2023-01-01 10:15:00",
+                            timestamp: "2023-01-01T10:15:00.000Z",
                             location: "SubwayStation",
                             agent_replication: true,
                         },
                         {
                             agent_id: 103,
-                            timestamp: "2023-01-01 10:30:00",
+                            timestamp: "2023-01-01T10:30:00.000Z",
                             location: null,
                             agent_replication: false,
                         },
