@@ -83,20 +83,11 @@ export const ThemeTables = {
 };
 
 export const Queries: Record<
-    string,
-    Record<
-        number,
-        {
-            concept: string;
-            numOptions: number;
-            input: Array<Record<string, Record<string, any>>>;
-            expected: Array<Array<Record<string, any>>>;
-        }
-    >
+    ThemeType,
+    Record<string, { numOptions: number; input: any[]; expected: any[] }>
 > = {
     cyberpunk: {
-        0: {
-            concept: AllConcepts[0],
+        [AllConcepts[0]]: {
             numOptions: 1,
             input: [
                 {
@@ -119,8 +110,7 @@ export const Queries: Record<
                 ],
             ],
         },
-        1: {
-            concept: AllConcepts[1],
+        [AllConcepts[1]]: {
             numOptions: 2,
             input: [
                 {
@@ -177,8 +167,7 @@ export const Queries: Record<
                 ],
             ],
         },
-        2: {
-            concept: AllConcepts[2],
+        [AllConcepts[2]]: {
             numOptions: 1,
             input: [
                 {
@@ -232,8 +221,7 @@ export const Queries: Record<
                 ],
             ],
         },
-        3: {
-            concept: AllConcepts[3],
+        [AllConcepts[3]]: {
             numOptions: 2,
             input: [
                 {
@@ -292,8 +280,7 @@ export const Queries: Record<
                 ],
             ],
         },
-        4: {
-            concept: AllConcepts[4],
+        [AllConcepts[4]]: {
             numOptions: 2,
             input: [
                 {
@@ -429,8 +416,7 @@ export const Queries: Record<
                 ],
             ],
         },
-        5: {
-            concept: AllConcepts[5],
+        [AllConcepts[5]]: {
             numOptions: 4,
             input: [
                 {
@@ -447,8 +433,7 @@ export const Queries: Record<
                 ["INSERT 0 1"],
             ],
         },
-        6: {
-            concept: AllConcepts[6],
+        [AllConcepts[6]]: {
             numOptions: 4,
             input: [
                 {
@@ -465,8 +450,7 @@ export const Queries: Record<
                 ["UPDATE 1"],
             ],
         },
-        7: {
-            concept: AllConcepts[7],
+        [AllConcepts[7]]: {
             numOptions: 4,
             input: [
                 {
@@ -483,14 +467,12 @@ export const Queries: Record<
                 ["DELETE 1"],
             ],
         },
-        8: {
-            concept: AllConcepts[8],
+        [AllConcepts[8]]: {
             numOptions: 1,
             input: [],
             expected: [],
         },
-        9: {
-            concept: AllConcepts[9],
+        [AllConcepts[9]]: {
             numOptions: 1,
             input: [
                 {
@@ -558,8 +540,8 @@ export const Queries: Record<
     },
 
     fantasy: {
-        0: {
-            concept: AllConcepts[0],
+        [AllConcepts[0]]: {
+            numOptions: 1,
             input: [
                 {
                     name: "rings",
@@ -573,8 +555,8 @@ export const Queries: Record<
                 { name: "The Seven Rings", status: "Dwarven" },
             ],
         },
-        1: {
-            concept: AllConcepts[1],
+        [AllConcepts[1]]: {
+            numOptions: 1,
             input: [
                 {
                     name: "rings",
@@ -583,8 +565,8 @@ export const Queries: Record<
             ],
             expected: [{ name: "The One Ring", status: "Precious" }],
         },
-        2: {
-            concept: AllConcepts[2],
+        [AllConcepts[2]]: {
+            numOptions: 1,
             input: [
                 {
                     name: "rings",
@@ -593,8 +575,8 @@ export const Queries: Record<
             ],
             expected: [{ name: "The One Ring", status: "Precious" }],
         },
-        3: {
-            concept: AllConcepts[3],
+        [AllConcepts[3]]: {
+            numOptions: 1,
             input: [
                 {
                     name: "rings",
@@ -603,8 +585,8 @@ export const Queries: Record<
             ],
             expected: [{ name: "The Two Rings", status: null }],
         },
-        4: {
-            concept: AllConcepts[4],
+        [AllConcepts[4]]: {
+            numOptions: 1,
             input: [
                 {
                     name: "rings",
@@ -618,8 +600,8 @@ export const Queries: Record<
                 { name: "The Two Rings", status: "Powerful" },
             ],
         },
-        5: {
-            concept: AllConcepts[5],
+        [AllConcepts[5]]: {
+            numOptions: 1,
             input: [
                 {
                     name: "rings",
@@ -628,8 +610,8 @@ export const Queries: Record<
             ],
             expected: ["INSERT 0 1"],
         },
-        6: {
-            concept: AllConcepts[6],
+        [AllConcepts[6]]: {
+            numOptions: 1,
             input: [
                 {
                     name: "rings",
@@ -638,8 +620,8 @@ export const Queries: Record<
             ],
             expected: ["UPDATE 1"],
         },
-        7: {
-            concept: AllConcepts[7],
+        [AllConcepts[7]]: {
+            numOptions: 1,
             input: [
                 {
                     name: "rings",
@@ -648,8 +630,8 @@ export const Queries: Record<
             ],
             expected: ["DELETE 1"],
         },
-        8: {
-            concept: AllConcepts[8],
+        [AllConcepts[8]]: {
+            numOptions: 1,
             input: [
                 {
                     name: "rings",
@@ -658,8 +640,8 @@ export const Queries: Record<
             ],
             expected: ["START TRANSACTION", "ROLLBACK"],
         },
-        9: {
-            concept: AllConcepts[9],
+        [AllConcepts[9]]: {
+            numOptions: 1,
             input: [
                 {
                     name: "rings",
@@ -671,8 +653,8 @@ export const Queries: Record<
     },
 
     "real-world": {
-        0: {
-            concept: AllConcepts[0],
+        [AllConcepts[0]]: {
+            numOptions: 1,
             input: [
                 {
                     name: "movies",
@@ -686,8 +668,8 @@ export const Queries: Record<
                 { name: "Harry Potter", genre: "Fantasy" },
             ],
         },
-        1: {
-            concept: AllConcepts[1],
+        [AllConcepts[1]]: {
+            numOptions: 1,
             input: [
                 {
                     name: "movies",
@@ -699,8 +681,8 @@ export const Queries: Record<
                 { name: "2077", status: "Cyberpunk" },
             ],
         },
-        2: {
-            concept: AllConcepts[2],
+        [AllConcepts[2]]: {
+            numOptions: 1,
             input: [
                 {
                     name: "movies",
@@ -709,8 +691,8 @@ export const Queries: Record<
             ],
             expected: [{ name: "Matrix", genre: "Cyberpunk" }],
         },
-        3: {
-            concept: AllConcepts[3],
+        [AllConcepts[3]]: {
+            numOptions: 1,
             input: [
                 {
                     name: "movies",
@@ -719,8 +701,8 @@ export const Queries: Record<
             ],
             expected: [{ name: "The Lord of the Rings", status: null }],
         },
-        4: {
-            concept: AllConcepts[4],
+        [AllConcepts[4]]: {
+            numOptions: 1,
             input: [
                 {
                     name: "movies",
@@ -734,8 +716,8 @@ export const Queries: Record<
                 { name: "The Lord of the Rings", status: "Fantasy" },
             ],
         },
-        5: {
-            concept: AllConcepts[5],
+        [AllConcepts[5]]: {
+            numOptions: 1,
             input: [
                 {
                     name: "movies",
@@ -744,8 +726,8 @@ export const Queries: Record<
             ],
             expected: ["INSERT 0 1"],
         },
-        6: {
-            concept: AllConcepts[6],
+        [AllConcepts[6]]: {
+            numOptions: 1,
             input: [
                 {
                     name: "movies",
@@ -754,8 +736,8 @@ export const Queries: Record<
             ],
             expected: ["UPDATE 1"],
         },
-        7: {
-            concept: AllConcepts[7],
+        [AllConcepts[7]]: {
+            numOptions: 1,
             input: [
                 {
                     name: "movies",
@@ -764,8 +746,8 @@ export const Queries: Record<
             ],
             expected: ["DELETE 1"],
         },
-        8: {
-            concept: AllConcepts[8],
+        [AllConcepts[8]]: {
+            numOptions: 1,
             input: [
                 {
                     name: "movies",
@@ -774,8 +756,8 @@ export const Queries: Record<
             ],
             expected: ["START TRANSACTION", "ROLLBACK"],
         },
-        9: {
-            concept: AllConcepts[9],
+        [AllConcepts[9]]: {
+            numOptions: 1,
             input: [
                 {
                     name: "movies",
