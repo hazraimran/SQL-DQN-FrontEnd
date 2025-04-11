@@ -5,7 +5,7 @@ import rehypeRaw from 'rehype-raw';
 import { Send, Database, Wand, ClipboardList, ListChecks, CheckCircle, XCircle, History } from 'lucide-react';
 import { MasteryProgress } from './MasteryProgress';
 import { Queries } from '../utils/constants';
-import { getGeneratedQuery } from '../utils/llmService';
+import { generateQueryForConcept } from '../utils/queryHelpers';
 
 interface Schema {
   name: string;
@@ -281,69 +281,73 @@ export function MainUI({
         console.log('Error response:', response);
         const errorData = await response.json();
         console.log('Error data:', errorData);
-        const errorMessage = `${errorData.error || 'An unknown error occurred'}` +
-          `- ${errorData.details || 'No additional information available.'}`;
+        const errorMessage = `${errorData.message || 'An unknown error occurred'}`;
         throw new Error(errorMessage);
       }
 
+      // Parse response and handle data
       const data = await response.json();
-      const newActionNumber = parseInt(data.action, 10);
-      const newConcept = concepts[newActionNumber];
-      setConcept(newConcept);
-
-      // Generate new random choice and UPDATE STATE properly
-      const newRandomChoice = Math.floor(
-        Math.random() * Queries[theme as keyof typeof Queries][newConcept]?.numOptions || 1
-      );
-      setRandomChoice(newRandomChoice); // Use state setter
       
-      const chosenInput = Queries[theme as keyof typeof Queries][newConcept]?.input?.[newRandomChoice];
-      const chosenExpected = Queries[theme as keyof typeof Queries][newConcept]?.expected?.[newRandomChoice];
-      
-      // Use the new values
-      const narrative = await getGeneratedQuery(
-        theme,
-        newConcept,
-        chosenInput,
-        chosenExpected
-      );
+      // Extract all needed values from the response
+      const { newMastery, action, resultFromDB, correct } = data;
+      const isCorrect = Boolean(correct); // Ensure it's a boolean
 
-      console.log(JSON.stringify(data, null, 2));
-      const isCorrect = data.correct;
-
-      console.log('Correctness data:', data.correct, 'Interpreted as:', isCorrect);
-
-      if (isCorrect) {
-        setShowSuccessAnimation(true);
-        setShowErrorAnimation(false);
-        setTimeout(() => setShowSuccessAnimation(false), 1500);
-      } else {
-        setShowErrorAnimation(true);
-        setShowSuccessAnimation(false);
-        setTimeout(() => setShowErrorAnimation(false), 1500);
-      }
-
-      const previousResultFromDB = data.resultFromDB;
-      const dbResultString = formatDBResult(previousResultFromDB);
-
-      setHistory((prev) => [...prev, { 
-        userQuery: input, 
-        dbResultString 
-      }]);
-
-      setTasks((currentTasks) => [
+      // Initialize tasks with the first task from initialOutput
+      setTasks(currentTasks => [
         ...currentTasks,
         {
           taskName: `Task ${currentTasks.length + 1}`,
           correct: isCorrect,
-          concept: newConcept,
-          narrative: narrative
-        },
-      ]);
+          concept,
+          narrative: output
+      }]);
 
-      setOutput(`${narrative}`);
-      setMasteryLevels(data.newMastery);
+      const newActionNumber = parseInt(action, 10);
+      const newConcept = concepts[newActionNumber];
+      
+      // Update state with values from response
+      setConcept(newConcept);
+      setMasteryLevels(newMastery);
+      
+      // Format the database result
+      const dbResultString = formatDBResult(resultFromDB);
+      
+      // Save the query and result to history
+      setHistory(prev => [...prev, { 
+        userQuery: input, 
+        dbResultString 
+      }]);
 
+      // Use the helper function to generate the next query
+      const { narrative, randomChoice: newRandomChoice } = await generateQueryForConcept(
+        theme,
+        newConcept
+      );
+      
+      setRandomChoice(newRandomChoice);
+
+      // Show appropriate animation based on correctness
+      if (isCorrect) {
+        setShowSuccessAnimation(true);
+        setTimeout(() => setShowSuccessAnimation(false), 1500);
+      } else {
+        setShowErrorAnimation(true);
+        setTimeout(() => setShowErrorAnimation(false), 1500);
+      }
+
+      // // Add task to history with the next task number (since we pre-populated Task 1)
+      // setTasks(currentTasks => [
+      //   ...currentTasks,
+      //   {
+      //     taskName: `Task ${currentTasks.length + 1}`,
+      //     correct: isCorrect,
+      //     concept: newConcept,
+      //     narrative
+      //   }
+      // ]);
+
+      // Set the new output and clear input
+      setOutput(narrative);
       setInput('');
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';

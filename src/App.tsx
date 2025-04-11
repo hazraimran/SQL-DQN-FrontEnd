@@ -3,8 +3,8 @@ import { WelcomeScreen } from './components/WelcomeScreen';
 import { LoadingScreen } from './components/LoadingScreen';
 import { MainUI } from './components/MainUI';
 import { SetupModal } from './components/SetupModal';
-import { Queries, ThemeTables, ThemeType } from './utils/constants';
-import { getGeneratedQuery } from './utils/llmService';
+import { ThemeTables, ThemeType } from './utils/constants';
+import { generateQueryForConcept } from './utils/queryHelpers';
 
 type GameState = 'loading' | 'welcome' | 'main';
 
@@ -37,24 +37,17 @@ function App() {
     setSchema(ThemeTables[chosenTheme]);
 
     const actionNumber = parseInt(action, 10);
-    const chosenConcept = concepts[actionNumber]; // Store in local variable
+    const chosenConcept = concepts[actionNumber];
     setConcept(chosenConcept);
 
-    const randomChoice = Math.floor(Math.random() * Queries[chosenTheme][chosenConcept].numOptions);
-    setRandomChoice(randomChoice);
-    
-    // Use chosenConcept as the key (not actionNumber)
-    const chosenInput = Queries[chosenTheme][chosenConcept].input[randomChoice];
-    const chosenExpected = Queries[chosenTheme][chosenConcept].expected[randomChoice];
-    
-    const narrative = await getGeneratedQuery(
+    // Use the helper function
+    const { narrative, randomChoice: generatedChoice } = await generateQueryForConcept(
       chosenTheme,
-      chosenConcept,
-      chosenInput,
-      chosenExpected
+      chosenConcept
     );
     
-    setSystemOutput(`${narrative}`);
+    setRandomChoice(generatedChoice);
+    setSystemOutput(narrative);
     setIsSetupModalOpen(false);
     setGameState('main');
   };
