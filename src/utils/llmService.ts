@@ -19,12 +19,32 @@ function getQueryHistory(): QueryHistoryItem[] {
 
 function saveQueryHistory(history: QueryHistoryItem[]): void {
   try {
-    // Keep only the most recent 5 items to avoid large prompts
-    const trimmedHistory = history.slice(-5);
-    localStorage.setItem('query_history', JSON.stringify(trimmedHistory));
+    // Only save history if setup is complete
+    if (localStorage.getItem('setup_complete') === 'true') {
+      // Keep only the most recent 5 items to avoid large prompts
+      const trimmedHistory = history.slice(-5);
+      localStorage.setItem('query_history', JSON.stringify(trimmedHistory));
+    }
   } catch (error) {
     console.error('Failed to save query history:', error);
   }
+}
+
+// Function to mark setup as complete
+export function markSetupComplete(): void {
+  localStorage.setItem('setup_complete', 'true');
+}
+
+// Function to clear history
+export function clearQueryHistory(): void {
+  localStorage.removeItem('query_history');
+}
+
+// Add event listener to clear history when page is closed
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', () => {
+    clearQueryHistory();
+  });
 }
 
 export async function getGeneratedQuery(
