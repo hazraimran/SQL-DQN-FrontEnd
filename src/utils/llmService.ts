@@ -1,4 +1,3 @@
-// Add this interface to describe the query history item
 interface QueryHistoryItem {
   theme: string;
   concept: string;
@@ -145,4 +144,51 @@ export async function getGeneratedQuery(
   saveQueryHistory(queryHistory);
 
   return generatedQuery;
+}
+
+interface ErrorMessageParams {
+  userQuery: string;
+  errorMessage: string;
+  concept: string;
+  theme: string;
+}
+
+export async function generateErrorMessage({
+  userQuery,
+  errorMessage,
+  concept,
+  theme
+}: ErrorMessageParams): Promise<string> {
+  const content = 
+    'You are an SQL tutor helping a student. ' +
+    'Provide a helpful, informative explanation of what went wrong with their SQL query. ' +
+    'Be encouraging and educational. ' +
+    'Include a hint about how to fix the issue without giving the full answer. ' +
+    'Keep your response under 100 words. ' +
+    'Format your response in conversational language. ' +
+    '\n\n' +
+    `Theme: ${theme}\n` +
+    `SQL Concept being practiced: ${concept}\n` +
+    `User's SQL Query: \`${userQuery}\`\n` +
+    `Error message: ${errorMessage}\n`;
+
+  try {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${import.meta.env.VITE_OPENROUTER_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'deepseek/deepseek-chat-v3-0324:free',
+        messages: [{ role: 'user', content }],
+      }),
+    });
+
+    const data = await response.json();
+    return data.choices[0].message.content;
+  } catch (error) {
+    console.error('Error generating helpful error message:', error);
+    return errorMessage; // Return the original error message as fallback
+  }
 }

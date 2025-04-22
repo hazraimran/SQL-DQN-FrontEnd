@@ -6,6 +6,7 @@ import { formatDBResult } from '../utils/formatters';
 import { useTypewriter } from '../hooks/useTypewriter';
 import { animations } from '../styles/animations';
 import { MainUIProps, HistoryEntry, TaskStatus } from '../types';
+import { generateErrorMessage } from '../utils/llmService';
 
 // Import components
 import { TaskList } from './TaskList';
@@ -147,21 +148,53 @@ export function MainUI({
       setOutput(narrative);
       setInput('');
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-      
-      setOutput(prevOutput => {
-        const hasExistingError = prevOutput.includes("Error:");
-        if (hasExistingError) {
-          return prevOutput.split("Error:")[0] + `<span class="text-red-500">Error: ${errorMessage}</span>`;
-        } else {
-          return prevOutput + `\n\n<span class="text-red-500">Error: ${errorMessage}</span>`;
-        }
-      });
+      const basicErrorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
       
       setShowErrorAnimation(true);
       setTimeout(() => setShowErrorAnimation(false), 1500);
-    } finally {
-      setIsLoading(false);
+      
+      try {
+        // Set a temporary error message while waiting for the LLM
+        setOutput(prevOutput => {
+          return prevOutput + `\n\n<span class="text-red-500">Error: ${basicErrorMessage}</span>`;
+        });
+        
+        // Call the LLM service to get a more helpful error message
+        const improvedErrorMessage = await generateErrorMessage({
+          userQuery: input,
+          errorMessage: basicErrorMessage,
+          concept,
+          theme
+        });
+        
+        // Update the output with the improved error message
+        setOutput(prevOutput => {
+          const hasExistingError = prevOutput.includes("Error:");
+          if (hasExistingError) {
+            return prevOutput.split("Error:")[0] + 
+              `<span class="text-red-500">Error: ${improvedErrorMessage}</span>`;
+          } else {
+            return prevOutput + 
+              `\n\n<span class="text-red-500">Error: ${improvedErrorMessage}</span>`;
+          }
+        });
+      } catch (llmError) {
+        // Fallback in case the LLM service fails
+        console.error('Failed to generate improved error message:', llmError);
+        
+        setOutput(prevOutput => {
+          const hasExistingError = prevOutput.includes("Error:");
+          if (hasExistingError) {
+            return prevOutput.split("Error:")[0] + 
+              `<span class="text-red-500">Error: ${basicErrorMessage}</span>`;
+          } else {
+            return prevOutput + 
+              `\n\n<span class="text-red-500">Error: ${basicErrorMessage}</span>`;
+          }
+        });
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 

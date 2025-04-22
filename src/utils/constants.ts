@@ -443,12 +443,7 @@ export const Queries: Record<
                     multi_agent_events: [],
                 },
             ],
-            expected: [
-                ["UPDATE 1"],
-                ["UPDATE 1"],
-                ["UPDATE 1"],
-                ["UPDATE 1"],
-            ],
+            expected: [["UPDATE 1"], ["UPDATE 1"], ["UPDATE 1"], ["UPDATE 1"]],
         },
         [AllConcepts[7]]: {
             numOptions: 4,
@@ -460,12 +455,7 @@ export const Queries: Record<
                     multi_agent_events: [],
                 },
             ],
-            expected: [
-                ["DELETE 1"],
-                ["DELETE 1"],
-                ["DELETE 1"],
-                ["DELETE 1"],
-            ],
+            expected: [["DELETE 1"], ["DELETE 1"], ["DELETE 1"], ["DELETE 1"]],
         },
         [AllConcepts[8]]: {
             numOptions: 1,
@@ -473,7 +463,7 @@ export const Queries: Record<
             expected: [],
         },
         [AllConcepts[9]]: {
-            numOptions: 1,
+            numOptions: 2,
             input: [
                 {
                     multi_agent_events: [
@@ -508,6 +498,8 @@ export const Queries: Record<
                             agent_replication: false,
                         },
                     ],
+                },
+                {
                     mission_logs: [
                         {
                             mission_name: "Free The Mind",
@@ -533,40 +525,266 @@ export const Queries: Record<
                     ],
                 },
             ],
-            expected: [
-                [],
-            ],
+            expected: [[], []],
         },
     },
 
     fantasy: {
         [AllConcepts[0]]: {
-            numOptions: 1,
+            numOptions: 4,
             input: [
                 {
-                    name: "rings",
-                    columns: ["name", "status"],
+                    rings: [
+                        { name: "Aragorn", profession: "Ranger" },
+                        { name: "Frodo", profession: "RingBearer" },
+                        { name: "Gandalf", profession: "Wizard" },
+                        { name: "Gollum", profession: null },
+                        { name: "Legolas", profession: "ElvenArcher" },
+                        { name: "Samwise", profession: "Gardener" },
+                        { name: "Bilbo", profession: "RingBearer" },
+                        { name: "Sauron", profession: "DarkLord" },
+                    ],
+                },
+                {
+                    battle_summaries: [
+                        {
+                            hero_id: 1,
+                            timestamp: "2025-03-05T09:15:00.000Z",
+                            location: "PelennorFields",
+                            victory: true,
+                        },
+                        {
+                            hero_id: 2,
+                            timestamp: "2025-03-05T09:30:00.000Z",
+                            location: "MountDoom",
+                            victory: true,
+                        },
+                        {
+                            hero_id: 4,
+                            timestamp: "2025-03-05T09:45:00.000Z",
+                            location: "MountDoom",
+                            victory: null,
+                        },
+                        {
+                            hero_id: 3,
+                            timestamp: "2025-03-05T10:00:00.000Z",
+                            location: null,
+                            victory: true,
+                        },
+                        {
+                            hero_id: 5,
+                            timestamp: "2025-03-05T10:15:00.000Z",
+                            location: "HelmsDeep",
+                            victory: true,
+                        },
+                        {
+                            hero_id: 6,
+                            timestamp: "2025-03-05T10:30:00.000Z",
+                            location: "HelmsDeep",
+                            victory: false,
+                        },
+                    ],
+                },
+                {
+                    chronicles: [
+                        { quest_name: "Protect the Ring", quest_description: "Ensure the One Ring never falls into evil hands." },
+                        { quest_name: "Assemble the Fellowship", quest_description: "Gather heroes from across Middle‑earth." },
+                        { quest_name: "Defend Minas Tirith", quest_description: "Hold the White City against Sauron’s armies." },
+                        { quest_name: "Crown the King", quest_description: "Place the rightful king upon the throne." },
+                        { quest_name: "Restore the Shire", quest_description: "Rebuild the Hobbits' homeland after the war." },
+                    ],
+                },
+                {
+                    quest_logs: [
+                        { quest_name: "Protect the Ring", hero_id: 2, reference: "Frodo sets out from the Shire." },
+                        { quest_name: "Protect the Ring", hero_id: 6, reference: "Samwise pledges never to leave Frodo’s side." },
+                        { quest_name: "Assemble the Fellowship", hero_id: 3, reference: "Council of Elrond chooses nine companions." },
+                        { quest_name: "Assemble the Fellowship", hero_id: 5, reference: "Legolas swears loyalty to Aragorn." },
+                        { quest_name: "Defend Minas Tirith", hero_id: 3, reference: "Gandalf rallies the defenders at the gate." },
+                        { quest_name: "Defend Minas Tirith", hero_id: 1, reference: "Aragorn arrives with the Army of the Dead." },
+                        { quest_name: "Crown the King", hero_id: 1, reference: "Aragorn crowned Elessar Telcontar." },
+                        { quest_name: "Restore the Shire", hero_id: 2, reference: "Hobbits return to drive out the ruffians." },
+                    ],
                 },
             ],
             expected: [
-                { name: "The One Ring", status: "Precious" },
-                { name: "The Two Rings", status: "Powerful" },
-                { name: "The Three Rings", status: "Elven" },
-                { name: "The Seven Rings", status: "Dwarven" },
+                [
+                    { name: "Aragorn", profession: "Ranger" },
+                    { name: "Frodo", profession: "RingBearer" },
+                    { name: "Gandalf", profession: "Wizard" },
+                    { name: "Gollum", profession: null },
+                    { name: "Legolas", profession: "ElvenArcher" },
+                    { name: "Samwise", profession: "Gardener" },
+                    { name: "Bilbo", profession: "RingBearer" },
+                    { name: "Sauron", profession: "DarkLord" },
+                ],
+                [
+                    {
+                        hero_id: 1,
+                        timestamp: "2025-03-05T09:15:00.000Z",
+                        location: "PelennorFields",
+                        victory: true,
+                    },
+                    {
+                        hero_id: 2,
+                        timestamp: "2025-03-05T09:30:00.000Z",
+                        location: "MountDoom",
+                        victory: true,
+                    },
+                    {
+                        hero_id: 4,
+                        timestamp: "2025-03-05T09:45:00.000Z",
+                        location: "MountDoom",
+                        victory: null,
+                    },
+                    {
+                        hero_id: 3,
+                        timestamp: "2025-03-05T10:00:00.000Z",
+                        location: null,
+                        victory: true,
+                    },
+                    {
+                        hero_id: 5,
+                        timestamp: "2025-03-05T10:15:00.000Z",
+                        location: "HelmsDeep",
+                        victory: true,
+                    },
+                    {
+                        hero_id: 6,
+                        timestamp: "2025-03-05T10:30:00.000Z",
+                        location: "HelmsDeep",
+                        victory: false,
+                    },
+                ],
+                [
+                    { quest_name: "Protect the Ring", quest_description: "Ensure the One Ring never falls into evil hands." },
+                    { quest_name: "Assemble the Fellowship", quest_description: "Gather heroes from across Middle‑earth." },
+                    { quest_name: "Defend Minas Tirith", quest_description: "Hold the White City against Sauron’s armies." },
+                    { quest_name: "Crown the King", quest_description: "Place the rightful king upon the throne." },
+                    { quest_name: "Restore the Shire", quest_description: "Rebuild the Hobbits' homeland after the war." },
+                ],
+                [
+                    { quest_name: "Protect the Ring", hero_id: 2, reference: "Frodo sets out from the Shire." },
+                    { quest_name: "Protect the Ring", hero_id: 6, reference: "Samwise pledges never to leave Frodo’s side." },
+                    { quest_name: "Assemble the Fellowship", hero_id: 3, reference: "Council of Elrond chooses nine companions." },
+                    { quest_name: "Assemble the Fellowship", hero_id: 5, reference: "Legolas swears loyalty to Aragorn." },
+                    { quest_name: "Defend Minas Tirith", hero_id: 3, reference: "Gandalf rallies the defenders at the gate." },
+                    { quest_name: "Defend Minas Tirith", hero_id: 1, reference: "Aragorn arrives with the Army of the Dead." },
+                    { quest_name: "Crown the King", hero_id: 1, reference: "Aragorn crowned Elessar Telcontar." },
+                    { quest_name: "Restore the Shire", hero_id: 2, reference: "Hobbits return to drive out the ruffians." },
+                ],
             ],
         },
         [AllConcepts[1]]: {
-            numOptions: 1,
+            numOptions: 4,
             input: [
                 {
-                    name: "rings",
-                    columns: ["name", "status"],
+                    battle_summaries: [
+                        {
+                            hero_id: 1,
+                            timestamp: "2025-03-05T09:15:00.000Z",
+                            location: "PelennorFields",
+                            victory: true,
+                        },
+                        {
+                            hero_id: 2,
+                            timestamp: "2025-03-05T09:30:00.000Z",
+                            location: "MountDoom",
+                            victory: true,
+                        },
+                        {
+                            hero_id: 4,
+                            timestamp: "2025-03-05T09:45:00.000Z",
+                            location: "MountDoom",
+                            victory: null,
+                        },
+                        {
+                            hero_id: 3,
+                            timestamp: "2025-03-05T10:00:00.000Z",
+                            location: null,
+                            victory: true,
+                        },
+                        {
+                            hero_id: 5,
+                            timestamp: "2025-03-05T10:15:00.000Z",
+                            location: "HelmsDeep",
+                            victory: true,
+                        },
+                        {
+                            hero_id: 6,
+                            timestamp: "2025-03-05T10:30:00.000Z",
+                            location: "HelmsDeep",
+                            victory: false,
+                        },                        
+                    ],
+                },
+                {
+                    chronicles: [
+                        { quest_name: "Protect the Ring", quest_description: "Ensure the One Ring never falls into evil hands." },
+                        { quest_name: "Assemble the Fellowship", quest_description: "Gather heroes from across Middle‑earth." },
+                        { quest_name: "Defend Minas Tirith", quest_description: "Hold the White City against Sauron’s armies." },
+                        { quest_name: "Crown the King", quest_description: "Place the rightful king upon the throne." },
+                        { quest_name: "Restore the Shire", quest_description: "Rebuild the Hobbits' homeland after the war." },
+                    ],
+                },
+                {
+                    rings: [
+                        { name: "Aragorn", profession: "Ranger" },
+                        { name: "Frodo", profession: "RingBearer" },
+                        { name: "Gandalf", profession: "Wizard" },
+                        { name: "Gollum", profession: null },
+                        { name: "Legolas", profession: "ElvenArcher" },
+                        { name: "Samwise", profession: "Gardener" },
+                        { name: "Bilbo", profession: "RingBearer" },
+                        { name: "Sauron", profession: "DarkLord" },
+                    ],                    
+                },
+                {
+                    quest_logs: [
+                        { quest_name: "Protect the Ring", hero_id: 2, reference: "Frodo sets out from the Shire." },
+                        { quest_name: "Protect the Ring", hero_id: 6, reference: "Samwise pledges never to leave Frodo’s side." },
+                        { quest_name: "Assemble the Fellowship", hero_id: 3, reference: "Council of Elrond chooses nine companions." },
+                        { quest_name: "Assemble the Fellowship", hero_id: 5, reference: "Legolas swears loyalty to Aragorn." },
+                        { quest_name: "Defend Minas Tirith", hero_id: 3, reference: "Gandalf rallies the defenders at the gate." },
+                        { quest_name: "Defend Minas Tirith", hero_id: 1, reference: "Aragorn arrives with the Army of the Dead." },
+                        { quest_name: "Crown the King", hero_id: 1, reference: "Aragorn crowned Elessar Telcontar." },
+                        { quest_name: "Restore the Shire", hero_id: 2, reference: "Hobbits return to drive out the ruffians." },
+                    ],
                 },
             ],
-            expected: [{ name: "The One Ring", status: "Precious" }],
+            expected: [
+                [
+                    {
+                        hero_id: 2,
+                        timestamp: "2025-03-05T09:30:00.000Z",
+                        location: "MountDoom",
+                        victory: true,
+                    },
+                    {
+                        hero_id: 4,
+                        timestamp: "2025-03-05T09:45:00.000Z",
+                        location: "MountDoom",
+                        victory: null,
+                    },
+                ],
+                [
+                    { quest_name: "Protect the Ring", quest_description: "Ensure the One Ring never falls into evil hands." },
+                    { quest_name: "Crown the King", quest_description: "Place the rightful king upon the throne." },
+                ],
+                [
+                    { name: "Frodo", profession: "RingBearer" },
+                    { name: "Bilbo", profession: "RingBearer" },
+                ],
+                [
+                    { quest_name: "Protect the Ring", hero_id: 2, reference: "Frodo sets out from the Shire." },
+                    { quest_name: "Defend Minas Tirith", hero_id: 1, reference: "Aragorn arrives with the Army of the Dead." },
+                    { quest_name: "Crown the King", hero_id: 1, reference: "Aragorn crowned Elessar Telcontar." },
+                    { quest_name: "Restore the Shire", hero_id: 2, reference: "Hobbits return to drive out the ruffians." },
+                ],
+            ],
         },
         [AllConcepts[2]]: {
-            numOptions: 1,
+            numOptions: 4,
             input: [
                 {
                     name: "rings",
