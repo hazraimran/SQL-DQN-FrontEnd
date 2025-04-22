@@ -32,8 +32,9 @@ export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
     setIsLoading(true);
     setError('');
 
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/setup-form`, {
+      const response = await fetch(`${API_URL}/setup-form`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ conceptsLength: concepts.length }),
