@@ -79,7 +79,7 @@ export function MainUI({
       
       const expected = conceptQueries.expected[randomChoice];
       
-      const response = await fetch('http://localhost:3000/submit-query', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/submit-query`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userQuery: input, expected }),
