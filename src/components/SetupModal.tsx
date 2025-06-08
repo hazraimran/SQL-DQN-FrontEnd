@@ -33,7 +33,7 @@ export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:3000/setup-form', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/setup-form`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ conceptsLength: concepts.length }),

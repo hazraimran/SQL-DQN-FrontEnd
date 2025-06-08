@@ -79,7 +79,7 @@ export function MainUI({
       
       const expected = conceptQueries.expected[randomChoice];
       
-      const response = await fetch('http://localhost:3000/submit-query', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/submit-query`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userQuery: input, expected }),
@@ -147,6 +147,10 @@ export function MainUI({
       // Set the new output and clear input
       setOutput(narrative);
       setInput('');
+      
+      // 修复：在成功路径中也要重置加载状态
+      setIsLoading(false);
+      
     } catch (error) {
       const basicErrorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
       
