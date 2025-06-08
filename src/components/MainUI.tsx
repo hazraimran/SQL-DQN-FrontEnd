@@ -147,6 +147,10 @@ export function MainUI({
       // Set the new output and clear input
       setOutput(narrative);
       setInput('');
+      
+      // 修复：在成功路径中也要重置加载状态
+      setIsLoading(false);
+      
     } catch (error) {
       const basicErrorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
       
