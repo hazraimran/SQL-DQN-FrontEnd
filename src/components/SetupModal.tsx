@@ -9,6 +9,9 @@ interface SetupModalProps {
     theme: ThemeType;
     concepts: string[];
     action: string;
+    narrative: string;
+    randomChoice: number;
+    concept: string;
   }) => void;
 }
 
@@ -16,8 +19,17 @@ export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
   const [theme, setTheme] = useState<ThemeType>('cyberpunk' as ThemeType);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
+  const [loadingStep, setLoadingStep] = useState(0);
   const [concepts, setConcepts] = useState<string[]>([]);
+
+  const loadingSteps = [
+    "Connecting to server...",
+    "Initializing AI agent...",
+    "Preparing game environment...",
+    "Loading theme data...",
+    "Generating first quest...",
+    "Finalizing setup..."
+  ];
 
   function toggleConcept(concept: string) {
     setConcepts((prev) =>
@@ -29,30 +41,110 @@ export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate form data first
+    if (concepts.length === 0) {
+      setError('Please select at least one concept to continue.');
+      return;
+    }
+    
     setIsLoading(true);
     setError('');
+    setLoadingStep(0);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/setup-form`, {
+      // Step 1: Connecting to server
+      setLoadingStep(0);
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      const apiUrl = import.meta.env.VITE_API_URL;
+      const isDev = import.meta.env.MODE === 'development';
+      
+      console.log('Making request to API');
+      console.log('Environment:', import.meta.env.MODE);
+      console.log('VITE_API_URL:', apiUrl);
+      console.log('Selected concepts:', concepts);
+
+      // Force proxy in production to avoid HTTPS upgrade issues
+      const finalApiUrl = isDev 
+        ? (apiUrl || 'http://localhost:3000')  // Dev: use env var or localhost
+        : '/api';  // Production: always use proxy
+      
+      console.log('Final API URL:', finalApiUrl);
+
+      const fullUrl = `${finalApiUrl}/setup-form`;
+      console.log('Full URL:', fullUrl);
+      
+      const requestBody = { conceptsLength: concepts.length };
+      console.log('Request body:', requestBody);
+      
+      // Step 2: Initializing AI agent
+      setLoadingStep(1);
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      const response = await fetch(fullUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ conceptsLength: concepts.length }),
+        body: JSON.stringify(requestBody),
         mode: 'cors',
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response ok:', response.ok);
+
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(errorText);
+        console.error('Response error:', errorText);
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
+      // Step 3: Preparing game environment
+      setLoadingStep(2);
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
       const data = await response.json();
+      console.log('Response data:', data);
 
-      // Pass theme, concepts and action to the parent
-      onComplete({ theme, concepts, action: data.action });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      // Reset loading only on error
+      // Step 4: Loading theme data
+      setLoadingStep(3);
+      await new Promise(resolve => setTimeout(resolve, 400));
+      
+      // Step 5: Generating first quest
+      setLoadingStep(4);
+      const actionNumber = parseInt(data.action, 10);
+      const chosenConcept = concepts[actionNumber];
+      
+      // Import the helper function dynamically
+      const { generateQueryForConcept } = await import('../utils/queryHelpers');
+      const { narrative, randomChoice: generatedChoice } = await generateQueryForConcept(
+        theme,
+        chosenConcept,
+        0.5, // Coefficient can be adjusted as needed
+      );
+      
+      // Step 6: Finalizing setup
+      setLoadingStep(5);
+      await new Promise(resolve => setTimeout(resolve, 400));
+
+      // Important: Reset loading state before calling onComplete
       setIsLoading(false);
+      
+      // Pass theme, concepts, action and generated content to the parent
+      onComplete({ 
+        theme, 
+        concepts, 
+        action: data.action, 
+        narrative, 
+        randomChoice: generatedChoice,
+        concept: chosenConcept
+      });
+    } catch (err) {
+      console.error('Request error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred';
+      setError(`Request failed: ${errorMessage}`);
+      // Reset loading state on error
+      setIsLoading(false);
+      setLoadingStep(0);
     }
   };
 
@@ -91,6 +183,16 @@ export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
   
         <h2 className="text-2xl font-bold mb-6">Game Setup</h2>
   
+        {isLoading && (
+          <div className="mb-4 p-3 bg-blue-500/20 border border-blue-500 rounded-lg">
+            <div className="flex items-center justify-between text-blue-400">
+              <span className="font-medium">Setup Progress</span>
+              <span className="text-sm">{loadingStep + 1} / {loadingSteps.length}</span>
+            </div>
+            <div className="mt-2 text-sm text-blue-300">{loadingSteps[loadingStep]}</div>
+          </div>
+        )}
+
         {error && (
           <div className="mb-4 p-3 bg-red-500/20 border border-red-500 rounded-lg text-red-400">
             {error}
@@ -106,9 +208,10 @@ export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
                   key={t}
                   type="button"
                   onClick={() => setTheme(t)}
-                  className={`px-3 py-2 rounded-lg ${
+                  disabled={isLoading}
+                  className={`px-3 py-2 rounded-lg transition-colors ${
                     theme === t ? 'bg-blue-500' : 'bg-gray-700'
-                  }`}
+                  } ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-600'}`}
                 >
                   {t}
                 </button>
@@ -120,11 +223,12 @@ export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
             <label className="block text-sm font-medium mb-1">Concepts</label>
             <div className="grid grid-cols-2 gap-2">
               {AllConcepts.map((concept) => (
-                <label key={concept} className="flex items-center space-x-2">
+                <label key={concept} className={`flex items-center space-x-2 ${isLoading ? 'opacity-50' : ''}`}>
                   <input
                     type="checkbox"
                     checked={concepts.includes(concept)}
                     onChange={() => toggleConcept(concept)}
+                    disabled={isLoading}
                     className="form-checkbox h-5 w-5 text-blue-600"
                   />
                   <span>{concept}</span>
@@ -138,12 +242,13 @@ export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
               type="file"
               accept=".csv"
               onChange={handleFileUpload}
+              disabled={isLoading}
               className="hidden"
               id="csv-upload"
             />
             <label
               htmlFor="csv-upload"
-              className="flex items-center justify-center px-4 py-2 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 transition-colors"
+              className={`flex items-center justify-center px-4 py-2 rounded-lg transition-colors hidden`}
             >
               <Upload className="w-4 h-4 mr-2" />
               Upload CSV
@@ -153,11 +258,26 @@ export function SetupModal({ isOpen, onClose, onComplete }: SetupModalProps) {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-2 bg-blue-500 rounded-lg font-medium hover:bg-blue-600
+            onClick={(e) => {
+              console.log('Start Game button clicked');
+              // The form onSubmit will handle the actual logic
+            }}
+            className="w-full py-3 bg-blue-500 rounded-lg font-medium hover:bg-blue-600
                      disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isLoading ? (
-              <span className="ml-2 inline-block w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin"></span>
+              <div className="space-y-2">
+                <div className="flex items-center justify-center">
+                  <span className="inline-block w-4 h-4 border-2 border-t-transparent border-white rounded-full animate-spin mr-2"></span>
+                  {loadingSteps[loadingStep]}
+                </div>
+                <div className="w-full bg-gray-600 rounded-full h-1">
+                  <div 
+                    className="bg-white h-1 rounded-full transition-all duration-300"
+                    style={{ width: `${((loadingStep + 1) / loadingSteps.length) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
             ) : (
               'Start Game'
             )}
